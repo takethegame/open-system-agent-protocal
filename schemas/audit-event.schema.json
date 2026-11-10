@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:osap:schema:audit-event:0.1",
+  "title": "OSAP Audit Event",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["audit_id", "trace_id", "actor", "action", "target", "decision", "ts", "prev_hash", "hash"],
+  "properties": {
+    "audit_id": { "type": "string", "minLength": 1 },
+    "trace_id": { "type": "string", "minLength": 1 },
+    "task_id": { "type": "string" },
+    "session_id": { "type": "string" },
+    "actor": { "type": "string", "pattern": "^(agent|user|system)://" },
+    "action": {
+      "type": "string",
+      "enum": [
+        "agent.registered",
+        "agent.registration_denied",
+        "capability.issued",
+        "capability.attenuated",
+        "capability.attenuation_denied",
+        "capability.exercised",
+        "capability.revoked",
+        "discovery.query",
+        "discovery.result",
+        "message.sent",
+        "message.delivered",
+        "task.created",
+        "task.delegated",
+        "task.handoff",
+        "task.cancelled",
+        "task.completed",
+        "task.failed",
+        "context.resolve",
+        "context.denied",
+        "consent.requested",
+        "consent.granted",
+        "consent.denied",
+        "effect.intent",
+        "effect.executed",
+        "effect.reconciled",
+        "egress.blocked",
+        "error"
+      ]
+    },
+    "phase": { "type": "string", "enum": ["intent", "outcome"] },
+    "target": { "type": "string", "minLength": 1 },
+    "decision": { "type": "string", "enum": ["allow", "deny", "allow_with_logging", "require_consent"] },
+    "policy": { "type": "string" },
+    "consent_receipt_id": { "type": "string" },
+    "intent_ref": { "type": "string" },
+    "context_refs": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "ts": { "type": "string", "format": "date-time" },
+    "prev_hash": { "type": "string", "minLength": 1 },
+    "hash": { "type": "string", "minLength": 1 },
+    "extensions": { "type": "object" }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "action": { "const": "effect.intent" } }, "required": ["action"] },
+      "then": { "required": ["phase"], "properties": { "phase": { "const": "intent" } } }
+    },
+    {
+      "if": { "properties": { "action": { "const": "effect.executed" } }, "required": ["action"] },
+      "then": { "required": ["phase"], "properties": { "phase": { "const": "outcome" } } }
+    },
+    {
+      "if": {
+        "properties": { "action": { "not": { "enum": ["effect.intent", "effect.executed"] } } },
+        "required": ["action"]
+      },
+      "then": { "not": { "required": ["phase"] } }
+    }
+  ]
+}

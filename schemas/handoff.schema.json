@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:osap:schema:handoff:0.1",
+  "title": "OSAP Handoff Payload",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["task_id", "new_owner", "delegated_capability"],
+  "properties": {
+    "task_id": { "type": "string", "minLength": 1 },
+    "new_owner": { "type": "string", "pattern": "^agent://" },
+    "reason": { "type": "string" },
+    "consent_receipt_id": { "type": "string", "minLength": 1 },
+    "delegated_capability": { "$ref": "urn:osap:schema:capability:0.1" }
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "osap_cap": "0.1",
+  "cap_id": "cap_01J9Z6Q3V8N2K4M7P1R5T0WXAB",
+  "issuer": "user://local/example-user",
+  "subject": "agent://com.example.orchestrator/main#1a2b",
+  "audience": "agent://com.example.calendar/agent#9c",
+  "task_id": "task_01J9Z6Q3V8N2K4M7P1R5T0WXAB",
+  "root_task_id": "task_01J9Z6Q3V8N2K4M7P1R5T0WXAA",
+  "actions": ["propose"],
+  "resources": ["calendar:primary"],
+  "constraints": {
+    "time_window": ["2026-11-10T00:00:00Z", "2026-11-17T00:00:00Z"],
+    "max_uses": 5,
+    "rate": "5/min",
+    "max_depth": 2,
+    "max_budget": { "wall_ms": 5000, "tool_calls": 2 },
+    "can_delegate": true
+  },
+  "iat": 1794305685,
+  "nbf": 1794305685,
+  "exp": 1794309285,
+  "parent_cap_id": "cap_01J9Z6Q3V8N2K4M7P1R5T0WXAA",
+  "depth": 1,
+  "consent_receipt_id": "consent_01J9Z6Q3V8N2K4M7P1R5T0WXAC",
+  "proof": {
+    "alg": "EdDSA",
+    "kid": "user-key-1",
+    "sig": "base64url-example-signature"
+  }
+}

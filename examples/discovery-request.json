@@ -1,0 +1,20 @@
+{
+  "osap": "0.1",
+  "id": "msg_01J9Z6Q3V8N2K4M7P1R5T0WX01",
+  "type": "discover",
+  "trace_id": "trace_01J9Z6Q3V8N2K4M7P1R5T0WX00",
+  "from": "agent://com.example.orchestrator/main#1a2b",
+  "to": { "agent": "agent://system/registry#0" },
+  "body": {
+    "schema": "osap.discover/v1",
+    "data": {
+      "intent": "为一次会议找空闲时间",
+      "requires": ["calendar.read", "calendar.propose"],
+      "schemas": ["osap.calendar.proposal/v1"],
+      "risk_max": "L2",
+      "sources": ["native", "vendor_registry", "mcp", "a2a"],
+      "limit": 5
+    }
+  },
+  "ts": "2026-11-10T10:14:45Z"
+}

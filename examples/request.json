@@ -1,0 +1,34 @@
+{
+  "osap": "0.1",
+  "id": "msg_01J9Z6Q3V8N2K4M7P1R5T0WX10",
+  "type": "request",
+  "trace_id": "trace_01J9Z6Q3V8N2K4M7P1R5T0WX00",
+  "causation_id": "msg_01J9Z6Q3V8N2K4M7P1R5T0WX02",
+  "session_id": "session_01J9Z6Q3V8N2K4M7P1R5T0WX09",
+  "from": "agent://com.example.orchestrator/main#1a2b",
+  "to": { "capability": "cap://os/calendar/events" },
+  "task": {
+    "id": "task_01J9Z6Q3V8N2K4M7P1R5T0WXAB",
+    "parent": "task_01J9Z6Q3V8N2K4M7P1R5T0WXAA",
+    "root": "task_01J9Z6Q3V8N2K4M7P1R5T0WXAA",
+    "mode": "supervisor"
+  },
+  "auth": {
+    "cap_id": "cap_01J9Z6Q3V8N2K4M7P1R5T0WXAB",
+    "token": "base64url-example-capability-token"
+  },
+  "body": {
+    "schema": "osap.calendar.propose/v1",
+    "data": {
+      "window": "2026-11-18T09:00:00Z/2026-11-18T12:00:00Z",
+      "duration_min": 60
+    }
+  },
+  "refs": ["obj://sha256:9f2c7b1a"],
+  "reply_to": "msg_01J9Z6Q3V8N2K4M7P1R5T0WX02",
+  "deadline": "2026-11-10T10:15:00Z",
+  "priority": "normal",
+  "consent": { "receipt_id": "consent_01J9Z6Q3V8N2K4M7P1R5T0WXAC" },
+  "origin": { "kind": "agent", "trust": "verified" },
+  "ts": "2026-11-10T10:14:45Z"
+}

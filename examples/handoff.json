@@ -1,0 +1,58 @@
+{
+  "osap": "0.1",
+  "id": "msg_01J9Z6Q3V8N2K4M7P1R5T0WX21",
+  "type": "handoff",
+  "trace_id": "trace_01J9Z6Q3V8N2K4M7P1R5T0WX00",
+  "session_id": "session_01J9Z6Q3V8N2K4M7P1R5T0WX09",
+  "from": "agent://com.example.orchestrator/main#1a2b",
+  "to": { "agent": "agent://com.example.calendar/agent#9c" },
+  "task": {
+    "id": "task_01J9Z6Q3V8N2K4M7P1R5T0WXAB",
+    "parent": "task_01J9Z6Q3V8N2K4M7P1R5T0WXAA",
+    "root": "task_01J9Z6Q3V8N2K4M7P1R5T0WXAA",
+    "mode": "supervisor"
+  },
+  "auth": {
+    "cap_id": "cap_01J9Z6Q3V8N2K4M7P1R5T0WXAB",
+    "token": "base64url-example-parent-capability"
+  },
+  "body": {
+    "schema": "osap.handoff/v1",
+    "data": {
+      "task_id": "task_01J9Z6Q3V8N2K4M7P1R5T0WXAB",
+      "new_owner": "agent://com.example.calendar/agent#9c",
+      "reason": "排期后续步骤由日历 Agent 直接完成",
+      "delegated_capability": {
+        "osap_cap": "0.1",
+        "cap_id": "cap_01J9Z6Q3V8N2K4M7P1R5T0WXAF",
+        "issuer": "agent://com.example.orchestrator/main#1a2b",
+        "subject": "agent://com.example.calendar/agent#9c",
+        "audience": "agent://com.example.calendar/agent#9c",
+        "task_id": "task_01J9Z6Q3V8N2K4M7P1R5T0WXAB",
+        "root_task_id": "task_01J9Z6Q3V8N2K4M7P1R5T0WXAA",
+        "actions": ["propose"],
+        "resources": ["calendar:primary"],
+        "constraints": {
+          "time_window": ["2026-11-10T00:00:00Z", "2026-11-17T00:00:00Z"],
+          "max_uses": 5,
+          "max_depth": 2,
+          "max_budget": { "wall_ms": 5000, "tool_calls": 2 },
+          "can_delegate": false
+        },
+        "iat": 1794305685,
+        "nbf": 1794305685,
+        "exp": 1794309285,
+        "parent_cap_id": "cap_01J9Z6Q3V8N2K4M7P1R5T0WXAB",
+        "depth": 2,
+        "proof": {
+          "alg": "EdDSA",
+          "kid": "orchestrator-key-1",
+          "sig": "base64url-example-signature"
+        }
+      }
+    }
+  },
+  "deadline": "2026-11-10T10:15:00Z",
+  "origin": { "kind": "agent", "trust": "verified" },
+  "ts": "2026-11-10T10:14:45Z"
+}

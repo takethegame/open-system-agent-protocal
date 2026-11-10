@@ -1,0 +1,31 @@
+{
+  "osap": "0.1",
+  "id": "msg_01J9Z6Q3V8N2K4M7P1R5T0WX02",
+  "type": "result",
+  "trace_id": "trace_01J9Z6Q3V8N2K4M7P1R5T0WX00",
+  "causation_id": "msg_01J9Z6Q3V8N2K4M7P1R5T0WX01",
+  "from": "agent://system/registry#0",
+  "to": { "agent": "agent://com.example.orchestrator/main#1a2b" },
+  "body": {
+    "schema": "osap.discover.result/v1",
+    "data": {
+      "candidates": [
+        {
+          "record_id": "cr_01J9Z6Q3V8N2K4M7P1R5T0WX03",
+          "agent": "agent://com.example.calendar/agent#9c",
+          "capability": "cap://os/calendar/events",
+          "match": 0.94,
+          "risk": "L2",
+          "consent_hint": "first_use",
+          "source": {
+            "kind": "vendor_registry",
+            "registry": "android.appfunctions"
+          },
+          "trust": "system",
+          "schemas": ["osap.calendar.proposal/v1"]
+        }
+      ]
+    }
+  },
+  "ts": "2026-11-10T10:14:46Z"
+}

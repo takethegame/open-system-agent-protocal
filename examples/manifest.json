@@ -1,0 +1,29 @@
+{
+  "osap_manifest": "0.1",
+  "app": "app://com.example.calendar",
+  "version": "3.2.1",
+  "signature": "base64url-example-signature",
+  "agents": [
+    {
+      "agent": "agent://com.example.calendar/agent",
+      "display_name": "Calendar Agent",
+      "public_key": "base64url-example-public-key",
+      "capabilities": [
+        {
+          "cap": "cap://os/calendar/events",
+          "actions": ["read", "propose", "create"],
+          "resources": ["calendar:primary"],
+          "schemas": ["osap.calendar.event/v1", "osap.calendar.proposal/v1"],
+          "risk": "L2",
+          "cost": { "latency_ms_p50": 300 },
+          "consent": "first_use"
+        }
+      ],
+      "events": {
+        "publishes": ["event://app.com.example.calendar/event_changed"],
+        "subscribes": ["event://os/user/activity"]
+      },
+      "data_scopes": ["calendar:primary"]
+    }
+  ]
+}

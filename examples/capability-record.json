@@ -1,0 +1,32 @@
+{
+  "record_id": "cr_01J9Z6Q3V8N2K4M7P1R5T0WX03",
+  "source": {
+    "kind": "vendor_registry",
+    "registry": "android.appfunctions",
+    "native_id": "com.example.calendar.createEvent",
+    "version": "1.0.0"
+  },
+  "app": "app://com.example.calendar",
+  "agent": "agent://com.example.calendar/agent#9c",
+  "capability": {
+    "cap": "cap://os/calendar/events",
+    "actions": ["create"],
+    "resources": ["calendar:primary"],
+    "schemas": ["osap.calendar.event/v1"],
+    "risk": "L2",
+    "cost": { "latency_ms_p50": 300 }
+  },
+  "policy": {
+    "visibility": "discoverable",
+    "consent": "first_use"
+  },
+  "provenance": {
+    "trust": "system",
+    "signature": "base64url-example-signature",
+    "attested_at": "2026-11-10T10:00:00Z"
+  },
+  "freshness": {
+    "observed_at": "2026-11-10T10:00:00Z",
+    "expires_at": "2026-11-11T10:00:00Z"
+  }
+}

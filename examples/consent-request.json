@@ -1,0 +1,31 @@
+{
+  "osap": "0.1",
+  "id": "msg_01J9Z6Q3V8N2K4M7P1R5T0WX03",
+  "type": "consent.request",
+  "trace_id": "trace_01J9Z6Q3V8N2K4M7P1R5T0WX00",
+  "from": "agent://system/policy#0",
+  "to": { "user": "user://local/example-user" },
+  "body": {
+    "schema": "osap.consent.request/v1",
+    "data": {
+      "request_id": "creq_01J9Z6Q3V8N2K4M7P1R5T0WX40",
+      "task_id": "task_01J9Z6Q3V8N2K4M7P1R5T0WXAB",
+      "agent": "agent://com.example.orchestrator/main#1a2b",
+      "audience": "agent://com.example.calendar/agent#9c",
+      "actions": ["propose"],
+      "resources": ["calendar:primary"],
+      "risk": "L2",
+      "summary": "在日历中创建一个 tentative 事件",
+      "intent_preview": {
+        "actor": "Orchestrator Agent",
+        "what": "读取下周三的空档并创建 1 个 tentative 事件",
+        "data": ["日历空闲信息", "事件标题与时间"],
+        "cost": { "money": 0, "external_calls": 0 },
+        "ttl": "PT10M",
+        "irreversible": false
+      },
+      "options": ["allow_once", "allow_task", "deny"]
+    }
+  },
+  "ts": "2026-11-10T10:14:45Z"
+}

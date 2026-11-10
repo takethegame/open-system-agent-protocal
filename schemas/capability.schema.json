@@ -1,0 +1,101 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:osap:schema:capability:0.1",
+  "title": "OSAP Capability Token",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "osap_cap",
+    "cap_id",
+    "issuer",
+    "subject",
+    "audience",
+    "task_id",
+    "root_task_id",
+    "actions",
+    "resources",
+    "iat",
+    "nbf",
+    "exp",
+    "depth",
+    "proof"
+  ],
+  "properties": {
+    "osap_cap": { "type": "string", "pattern": "^0\\.[0-9]+$" },
+    "cap_id": { "type": "string", "minLength": 1 },
+    "issuer": { "type": "string", "pattern": "^(user|agent|system)://" },
+    "subject": { "type": "string", "pattern": "^agent://" },
+    "audience": { "type": "string", "pattern": "^agent://" },
+    "task_id": { "type": "string", "minLength": 1 },
+    "root_task_id": { "type": "string", "minLength": 1 },
+    "actions": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "resources": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "constraints": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "time_window": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": { "type": "string", "format": "date-time" }
+        },
+        "max_uses": { "type": "integer", "minimum": 1 },
+        "rate": { "type": "string", "minLength": 1 },
+        "max_depth": { "type": "integer", "minimum": 0 },
+        "max_budget": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "wall_ms": { "type": "integer", "minimum": 0 },
+            "tool_calls": { "type": "integer", "minimum": 0 },
+            "tokens": { "type": "integer", "minimum": 0 },
+            "money": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "currency": { "type": "string", "minLength": 3, "maxLength": 3 },
+                "amount": { "type": "number", "minimum": 0 }
+              }
+            }
+          }
+        },
+        "session_id": { "type": "string", "minLength": 1 },
+        "can_delegate": { "type": "boolean" }
+      }
+    },
+    "iat": { "type": "integer", "minimum": 0 },
+    "nbf": { "type": "integer", "minimum": 0 },
+    "exp": { "type": "integer", "minimum": 0 },
+    "parent_cap_id": { "type": "string", "minLength": 1 },
+    "depth": { "type": "integer", "minimum": 0 },
+    "consent_receipt_id": { "type": "string", "minLength": 1 },
+    "proof": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["alg", "kid", "sig"],
+      "properties": {
+        "alg": { "type": "string", "enum": ["EdDSA"] },
+        "kid": { "type": "string", "minLength": 1 },
+        "sig": { "type": "string", "minLength": 1 }
+      }
+    },
+    "extensions": { "type": "object" }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "depth": { "minimum": 1 } }, "required": ["depth"] },
+      "then": { "required": ["parent_cap_id"] }
+    }
+  ]
+}

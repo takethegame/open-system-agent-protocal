@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:osap:schema:manifest:0.1",
+  "title": "OSAP App Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["osap_manifest", "app", "version", "signature", "agents"],
+  "properties": {
+    "osap_manifest": { "type": "string", "pattern": "^0\\.[0-9]+$" },
+    "app": { "type": "string", "pattern": "^app://" },
+    "version": { "type": "string", "minLength": 1 },
+    "signature": { "type": "string", "minLength": 1 },
+    "agents": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["agent", "display_name", "public_key", "capabilities"],
+        "properties": {
+          "agent": { "type": "string", "pattern": "^agent://" },
+          "display_name": { "type": "string", "minLength": 1 },
+          "public_key": { "type": "string", "minLength": 1 },
+          "capabilities": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["cap", "actions", "resources", "schemas", "risk"],
+              "properties": {
+                "cap": { "type": "string", "pattern": "^cap://" },
+                "actions": {
+                  "type": "array",
+                  "minItems": 1,
+                  "uniqueItems": true,
+                  "items": { "type": "string", "minLength": 1 }
+                },
+                "resources": {
+                  "type": "array",
+                  "minItems": 1,
+                  "uniqueItems": true,
+                  "items": { "type": "string", "minLength": 1 }
+                },
+                "schemas": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": { "type": "string", "minLength": 1 }
+                },
+                "risk": { "type": "string", "enum": ["L0", "L1", "L2", "L3", "L4"] },
+                "cost": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "latency_ms_p50": { "type": "integer", "minimum": 0 }
+                  }
+                },
+                "consent": {
+                  "type": "string",
+                  "enum": ["none", "first_use", "per_task", "per_use"]
+                }
+              }
+            }
+          },
+          "events": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "publishes": {
+                "type": "array",
+                "items": { "type": "string", "pattern": "^event://" }
+              },
+              "subscribes": {
+                "type": "array",
+                "items": { "type": "string", "pattern": "^event://" }
+              }
+            }
+          },
+          "data_scopes": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 }
+          }
+        }
+      }
+    },
+    "extensions": { "type": "object" }
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "task_id": "task_01J9Z6Q3V8N2K4M7P1R5T0WXAB",
+  "parent_task_id": "task_01J9Z6Q3V8N2K4M7P1R5T0WXAA",
+  "root_task_id": "task_01J9Z6Q3V8N2K4M7P1R5T0WXAA",
+  "session_id": "session_01J9Z6Q3V8N2K4M7P1R5T0WX09",
+  "mode": "supervisor",
+  "goal": "在下周三 9:00-12:00 中找到 60 分钟空档并创建 tentative 事件",
+  "owner": "agent://com.example.orchestrator/main#1a2b",
+  "assignee": "agent://com.example.calendar/agent#9c",
+  "input_refs": ["obj://sha256:9f2c7b1a"],
+  "output_refs": [],
+  "budget": {
+    "wall_ms": 8000,
+    "tool_calls": 2,
+    "tokens": 2000,
+    "money": { "currency": "USD", "amount": 0 },
+    "depth": 1
+  },
+  "deadline": "2026-11-10T10:15:00Z",
+  "priority": "normal",
+  "status": "created",
+  "result_schema": "osap.calendar.proposal/v1",
+  "authority": { "cap_id": "cap_01J9Z6Q3V8N2K4M7P1R5T0WXAB" }
+}

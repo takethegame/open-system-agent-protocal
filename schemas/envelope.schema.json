@@ -1,0 +1,127 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:osap:schema:envelope:0.1",
+  "title": "OSAP Envelope",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["osap", "id", "type", "from", "to", "body", "ts"],
+  "properties": {
+    "osap": { "type": "string", "pattern": "^0\\.[0-9]+$" },
+    "id": { "type": "string", "minLength": 1 },
+    "type": {
+      "type": "string",
+      "enum": [
+        "hello",
+        "welcome",
+        "discover",
+        "describe",
+        "request",
+        "result",
+        "error",
+        "event",
+        "stream.open",
+        "stream.chunk",
+        "stream.close",
+        "cancel",
+        "delegate",
+        "handoff",
+        "status",
+        "consent.request",
+        "consent.grant",
+        "consent.deny"
+      ]
+    },
+    "trace_id": { "type": "string", "minLength": 1 },
+    "causation_id": { "type": "string", "minLength": 1 },
+    "session_id": { "type": "string", "minLength": 1 },
+    "from": { "type": "string", "pattern": "^agent://" },
+    "to": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["agent"],
+          "properties": { "agent": { "type": "string", "pattern": "^agent://" } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["capability"],
+          "properties": { "capability": { "type": "string", "pattern": "^cap://" } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["user"],
+          "properties": { "user": { "type": "string", "pattern": "^user://" } }
+        }
+      ]
+    },
+    "task": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "parent": { "type": "string", "minLength": 1 },
+        "root": { "type": "string", "minLength": 1 },
+        "mode": { "type": "string", "enum": ["supervisor", "peer"] },
+        "status": {
+          "type": "string",
+          "enum": ["created", "accepted", "running", "waiting_consent", "succeeded", "failed", "cancelled", "rejected"]
+        }
+      }
+    },
+    "auth": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["cap_id", "token"],
+      "properties": {
+        "cap_id": { "type": "string", "minLength": 1 },
+        "token": { "type": "string", "minLength": 1 }
+      }
+    },
+    "body": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "data"],
+      "properties": {
+        "schema": { "type": "string", "minLength": 1 },
+        "data": { "type": "object" }
+      }
+    },
+    "refs": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "reply_to": { "type": "string", "minLength": 1 },
+    "deadline": { "type": "string", "format": "date-time" },
+    "priority": { "type": "string", "enum": ["low", "normal", "high"] },
+    "consent": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": { "receipt_id": { "type": "string", "minLength": 1 } }
+    },
+    "origin": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "trust"],
+      "properties": {
+        "kind": { "type": "string", "enum": ["agent", "user", "system", "external"] },
+        "trust": { "type": "string", "enum": ["system", "verified", "unverified"] }
+      }
+    },
+    "ts": { "type": "string", "format": "date-time" },
+    "extensions": { "type": "object" }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "type": { "enum": ["request", "delegate", "handoff"] } } },
+      "then": { "required": ["task", "auth", "deadline"] }
+    },
+    {
+      "if": { "properties": { "type": { "const": "hello" } } },
+      "then": { "required": ["body"] }
+    }
+  ]
+}

@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:osap:schema:task:0.1",
+  "title": "OSAP Task",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["task_id", "root_task_id", "mode", "owner", "assignee", "budget", "status"],
+  "properties": {
+    "task_id": { "type": "string", "minLength": 1 },
+    "parent_task_id": { "type": "string", "minLength": 1 },
+    "root_task_id": { "type": "string", "minLength": 1 },
+    "session_id": { "type": "string", "minLength": 1 },
+    "mode": { "type": "string", "enum": ["supervisor", "peer"] },
+    "goal": { "type": "string" },
+    "owner": { "type": "string", "pattern": "^agent://" },
+    "assignee": { "type": "string", "pattern": "^agent://" },
+    "input_refs": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "output_refs": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "budget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["wall_ms"],
+      "properties": {
+        "wall_ms": { "type": "integer", "minimum": 0 },
+        "tool_calls": { "type": "integer", "minimum": 0 },
+        "tokens": { "type": "integer", "minimum": 0 },
+        "money": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "currency": { "type": "string", "minLength": 3, "maxLength": 3 },
+            "amount": { "type": "number", "minimum": 0 }
+          }
+        },
+        "depth": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "deadline": { "type": "string", "format": "date-time" },
+    "priority": { "type": "string", "enum": ["low", "normal", "high"] },
+    "status": {
+      "type": "string",
+      "enum": ["created", "accepted", "running", "waiting_consent", "succeeded", "failed", "cancelled", "rejected"]
+    },
+    "result_schema": { "type": "string", "minLength": 1 },
+    "detached": { "type": "boolean" },
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": { "cap_id": { "type": "string", "minLength": 1 } }
+    },
+    "extensions": { "type": "object" }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "mode": { "const": "supervisor" } }, "required": ["mode"] },
+      "then": { "required": ["parent_task_id"] }
+    },
+    {
+      "if": { "properties": { "mode": { "const": "peer" } }, "required": ["mode"] },
+      "then": { "required": ["session_id"] }
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "osap": "0.1",
+  "id": "msg_01J9Z6Q3V8N2K4M7P1R5T0WX11",
+  "type": "result",
+  "trace_id": "trace_01J9Z6Q3V8N2K4M7P1R5T0WX00",
+  "causation_id": "msg_01J9Z6Q3V8N2K4M7P1R5T0WX10",
+  "session_id": "session_01J9Z6Q3V8N2K4M7P1R5T0WX09",
+  "from": "agent://com.example.calendar/agent#9c",
+  "to": { "agent": "agent://com.example.orchestrator/main#1a2b" },
+  "task": { "id": "task_01J9Z6Q3V8N2K4M7P1R5T0WXAB", "status": "succeeded" },
+  "body": {
+    "schema": "osap.calendar.proposal/v1",
+    "data": {
+      "slots": [
+        {
+          "start": "2026-11-18T10:00:00Z",
+          "end": "2026-11-18T11:00:00Z"
+        }
+      ],
+      "event_draft_ref": "obj://sha256:9f2c7b1a"
+    }
+  },
+  "ts": "2026-11-10T10:14:46Z"
+}

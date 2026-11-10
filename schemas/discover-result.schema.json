@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:osap:schema:discover-result:0.1",
+  "title": "OSAP Discovery Result Payload",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["candidates"],
+  "properties": {
+    "candidates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "record_id",
+          "agent",
+          "capability",
+          "risk",
+          "consent_hint",
+          "source",
+          "trust"
+        ],
+        "properties": {
+          "record_id": { "type": "string", "minLength": 1 },
+          "agent": { "type": "string", "pattern": "^agent://" },
+          "capability": { "type": "string", "pattern": "^cap://" },
+          "match": { "type": "number", "minimum": 0, "maximum": 1 },
+          "risk": { "type": "string", "enum": ["L0", "L1", "L2", "L3", "L4"] },
+          "consent_hint": { "type": "string", "minLength": 1 },
+          "schemas": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "source": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["kind"],
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": ["vendor_registry", "mcp", "a2a", "dbus", "openapi", "native", "bridge"]
+              },
+              "registry": { "type": "string" },
+              "native_id": { "type": "string" }
+            }
+          },
+          "trust": {
+            "type": "string",
+            "enum": ["system", "verified", "unverified"]
+          }
+        }
+      }
+    }
+  }
+}

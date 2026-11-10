@@ -1,0 +1,29 @@
+OSAP — Open System Agent Protocol
+Copyright 2026 The OSAP Authors
+
+This repository contains a specification (docs/), JSON Schemas (schemas/),
+examples (examples/), and validation tooling (tools/). All of it is
+distributed under the Apache License, Version 2.0.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+"OSAP" and "Open System Agent Protocol" are project names. The Apache
+License does not grant permission to use them as trademarks; see
+GOVERNANCE.md for the naming and conformance-mark policy.
+
+Third-party names referenced in this repository — including Apple,
+App Intents, App Schemas, Android, AppFunctions, Windows, App Actions,
+MCP (Model Context Protocol), A2A (Agent2Agent), D-Bus, XPC, Binder,
+and OpenAPI — are trademarks or registered trademarks of their
+respective owners. They are used only to describe interoperability
+targets and do not imply any endorsement, sponsorship, or affiliation.
