@@ -222,7 +222,7 @@ tests/
 
 | 角色 | 示例 | 必须验证 |
 |---|---|---|
-| 主 Agent | 编排 App | 发现、委派、预算、取消 |
+| 主 Agent | 编排 App | 发现、委派、handoff、预算、取消 |
 | 子 Agent | 日历 App | 能力校验、结果 schema |
 | Peer Agent | 消息 App | 点对点会话、独立能力 |
 | 系统 Agent | OS 助手 | 保留命名空间、系统能力 |
@@ -234,6 +234,7 @@ tests/
 - 一次 L1 读取；
 - 一次 L2 本地写；
 - 一次 L3 外部副作用 + 同意；
+- 一次 handoff（接受与拒绝各一次）；
 - 一次取消/预算耗尽；
 - 一次撤销级联；
 - 一次句柄解析与出口阻断。
@@ -254,7 +255,7 @@ tests/
   "state_recovery": "durable",
   "cf_mode": "os_handles",
   "tests": {
-    "total": 64,
+    "total": 68,
     "passed": 62,
     "failed": 2,
     "skipped": 0

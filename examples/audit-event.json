@@ -6,7 +6,7 @@
   "actor": "agent://com.example.orchestrator/main#1a2b",
   "action": "effect.executed",
   "phase": "outcome",
-  "target": "cap://os/calendar/events",
+  "target": "calendar:primary",
   "decision": "allow",
   "policy": "calendar_first_use",
   "consent_receipt_id": "consent_01J9Z6Q3V8N2K4M7P1R5T0WXAC",

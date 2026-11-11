@@ -16,7 +16,7 @@
 
 ```bash
 python3 tools/validate_examples.py
-# OK: 12 checks passed
+# OK: 20 checks passed
 ```
 
 5. 变更流程、评审要求与版本规则见 [`GOVERNANCE.md`](GOVERNANCE.md)。

@@ -92,7 +92,7 @@ python3 tools/validate_examples.py
 # OK: 20 checks passed
 ```
 
-依赖：`jsonschema`（Python 3.9+）。
+依赖：`jsonschema` 4.18+（Python 3.9+；`referencing` 为其依赖）。
 
 ---
 

@@ -13,7 +13,7 @@
           "cap": "cap://os/calendar/events",
           "actions": ["read", "propose", "create"],
           "resources": ["calendar:primary"],
-          "schemas": ["osap.calendar.event/v1", "osap.calendar.proposal/v1"],
+          "schemas": ["osap.calendar.event/v1", "osap.calendar.propose/v1", "osap.calendar.proposal/v1"],
           "risk": "L2",
           "cost": { "latency_ms_p50": 300 },
           "consent": "first_use"

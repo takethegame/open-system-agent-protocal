@@ -419,7 +419,7 @@ Bus 返回 `welcome`，包含 `session_id`、特性开关、限制与 Bus 公钥
   "name": "calendar.events",
   "actions": ["read", "propose", "create"],
   "resources": ["calendar:primary"],
-  "schemas": ["osap.calendar.event/v1", "osap.calendar.proposal/v1"],
+  "schemas": ["osap.calendar.event/v1", "osap.calendar.propose/v1", "osap.calendar.proposal/v1"],
   "risk": "L2",
   "cost": { "latency_ms_p50": 300 },
   "constraints": {
@@ -577,7 +577,7 @@ App 安装或首次运行时注册清单：
           "cap": "cap://os/calendar/events",
           "actions": ["read", "propose", "create"],
           "resources": ["calendar:primary"],
-          "schemas": ["osap.calendar.event/v1", "osap.calendar.proposal/v1"],
+          "schemas": ["osap.calendar.event/v1", "osap.calendar.propose/v1", "osap.calendar.proposal/v1"],
           "risk": "L2",
           "consent": "first_use"
         }
@@ -670,7 +670,7 @@ App 安装或首次运行时注册清单：
     "data": {
       "intent": "为一次会议找空闲时间",
       "requires": ["calendar.read", "calendar.propose"],
-      "schemas": ["osap.calendar.proposal/v1"],
+      "schemas": ["osap.calendar.propose/v1", "osap.calendar.proposal/v1"],
       "risk_max": "L2",
       "sources": ["native", "vendor_registry", "mcp", "a2a"],
       "limit": 5
@@ -703,7 +703,7 @@ App 安装或首次运行时注册清单：
           "consent_hint": "first_use",
           "source": { "kind": "vendor_registry", "registry": "android.appfunctions" },
           "trust": "system",
-          "schemas": ["osap.calendar.proposal/v1"]
+          "schemas": ["osap.calendar.propose/v1", "osap.calendar.proposal/v1"]
         }
       ]
     }
@@ -866,8 +866,8 @@ Policy verdict 是**调用时**判决，不是发现结果的一部分。PCS 在
 - 调用方 MUST 使用 `id` 去重；接收方 SHOULD 缓存最近结果。
 - 重试 MUST 使用相同 `id`，或使用新的 `id` + 幂等键扩展。
 - `result` MUST 通过 `causation_id` 关联请求。
-- `delegate` MUST 携带新子任务的 `task.id` 与 `task.parent`；`auth.token.task_id` MUST 等于 `task.parent`。
-- `handoff` MUST 携带既有任务的 `task.id`；`auth.token.task_id` MUST 等于 `task.id`。
+- `delegate` MUST 携带新子任务的 `task.id` 与 `task.parent`；`auth.cap_id` 对应能力的 `task_id` MUST 等于 `task.parent`。
+- `handoff` MUST 携带既有任务的 `task.id`；`auth.cap_id` 对应能力的 `task_id` MUST 等于 `task.id`。
 
 ### 7.4 Events
 
@@ -1376,7 +1376,7 @@ CF MUST 优先复用 OS 原语，而不是复制其语义：
   "actor": "agent://com.example.orchestrator/main#1a2b",
   "action": "effect.executed",
   "phase": "outcome",
-  "target": "cap://os/calendar/events",
+  "target": "calendar:primary",
   "decision": "allow",
   "policy": "calendar_first_use",
   "consent_receipt_id": "consent_01J...",

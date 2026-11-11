@@ -22,7 +22,7 @@
             "registry": "android.appfunctions"
           },
           "trust": "system",
-          "schemas": ["osap.calendar.proposal/v1"]
+          "schemas": ["osap.calendar.propose/v1", "osap.calendar.proposal/v1"]
         }
       ]
     }
