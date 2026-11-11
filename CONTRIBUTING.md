@@ -1,6 +1,7 @@
 # Contributing to OSAP
 
 > 2026-11-10
+> English version: [CONTRIBUTING.en.md](CONTRIBUTING.en.md)
 
 本仓库包含规范、JSON Schema、示例与校验工具。所有贡献均以
 **Apache License 2.0** 授权，并要求 **DCO sign-off**。
@@ -72,7 +73,7 @@ Signed-off-by: Your Name <you@example.com>
 - **不要提交个人数据**：真实姓名、本机路径、设备名、邮箱之外的标识、真实联系人。
   示例一律使用 `com.example.*`、`example-user`、`example-device`。
 - **不要提交密钥**：示例中的签名用占位符，不得包含可用私钥。
-- **语言**：规范正文用中文；schema 标识符、字段名、错误码用英文。
+- **语言**：规范正文以中文为原文；`*.en.md` 为英文平行译本，语义冲突时以中文原文为准；schema 标识符、字段名、错误码用英文。
 - **术语**：与 `docs/standard.md` §2.2 保持一致；新增术语先改术语表。
 - **引用他人规范**：MUST 转述并标注出处（名称、版本、链接）。
   单段逐字引用不得超过 2 句，且 MUST 注明来源与许可；

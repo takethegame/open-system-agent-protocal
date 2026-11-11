@@ -1,5 +1,7 @@
 # OSAP — Open System Agent Protocol
 
+> English version: [README.en.md](README.en.md)
+
 > **本地优先的开放标准：跨应用 Agent 点对点协作、能力注册表联邦、任务级授权。**
 >
 > 版本：0.1 Draft · 2026-11-10 · 状态：讨论稿，尚无参考实现
@@ -80,6 +82,8 @@ LICENSE               Apache-2.0
 NOTICE                版权与商标说明
 README.md             本文件
 ```
+
+英文平行版本使用同名 `*.en.md` 文件，与中文原文并列存放。
 
 ---
 

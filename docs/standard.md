@@ -1,5 +1,7 @@
 # OSAP 0.1 — Open System Agent Protocol
 
+> English version: [standard.en.md](standard.en.md)
+
 **跨应用 Agent 点对点协作、能力注册表联邦与任务级授权**
 
 | 项目 | 内容 |

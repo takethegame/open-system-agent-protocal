@@ -1,6 +1,7 @@
 # OSAP Governance
 
 > 草案 · 2026-11-10
+> English version: [GOVERNANCE.en.md](GOVERNANCE.en.md)
 
 本文定义 OSAP 标准的版本、变更、评审与联络机制。除 §10 的许可与商标条款外，它是治理建议，不构成法律协议。
 

@@ -1,6 +1,7 @@
 # OSAP Conformance
 
 > 非规范性文档 · 2026-11-10
+> English version: [conformance.en.md](conformance.en.md)
 > 配套规范：[`standard.md`](standard.md)
 
 本文定义 OSAP 实现的一致性等级、测试方法、互操作要求与报告格式。

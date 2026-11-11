@@ -1,6 +1,7 @@
 # OSAP：开放系统 Agent 协议（总体设计草案）
 
 > 工作名称：**OSAP**（Open System Agent Protocol）
+> English version: [design-draft.en.md](design-draft.en.md)
 > 运行时组件：**Agent Bus**
 > 文档状态：非规范性设计说明（Non-normative）· 2026-11-10
 > 定位：跨平台概念优先，不绑定具体 OS 原语；落地时可映射到 D-Bus / XPC / Binder / named pipe。

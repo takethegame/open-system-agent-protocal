@@ -1,6 +1,7 @@
 # Prior Art and Positioning
 
 > 非规范性文档 · 2026-11-10
+> English version: [prior-art.en.md](prior-art.en.md)
 > 目的：说明 OSAP 与现有工作的重叠、边界与可能的新颖点。本文是公开资料调研，不是法律意义上的专利检索。
 
 ---
