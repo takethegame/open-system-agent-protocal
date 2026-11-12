@@ -1,0 +1,19 @@
+{
+  "handle": "ctx://user/profile#display_name",
+  "scheme": "ctx",
+  "task_id": "task_01J9Z6Q3V8N2K4M7P1R5T0WXAB",
+  "audience": "agent://com.example.orchestrator/main#1a2b",
+  "scope": "task",
+  "ttl": 600,
+  "expires_at": "2026-11-10T10:24:45Z",
+  "created_at": "2026-11-10T10:14:45Z",
+  "label": "personal",
+  "origin": { "kind": "app", "id": "app://com.example.notes" },
+  "trust": "verified",
+  "derived_from": ["obj://sha256:9f2c7b1a"],
+  "constraints": {
+    "allow_egress": false,
+    "allowed_agents": ["agent://com.example.orchestrator/main#1a2b"]
+  },
+  "revocable": true
+}

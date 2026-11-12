@@ -1,0 +1,215 @@
+{
+  "level": "C5",
+  "cases": [
+    {
+      "id": "C5-01",
+      "level": "C5",
+      "title": "resolving a handle without a resolve capability is denied",
+      "mode": "automated",
+      "operation": "resolve",
+      "input": {
+        "ref": "../../examples/context-handle.json",
+        "params": {
+          "action": "resolve",
+          "granted_actions": ["read"]
+        }
+      },
+      "expect": {
+        "outcome": "reject",
+        "error": "CONTEXT_DENIED"
+      },
+      "notes": "The capability must carry resolve over the handle resource (standard.md §9.2); read alone is insufficient."
+    },
+    {
+      "id": "C5-02",
+      "level": "C5",
+      "title": "expired handle is rejected without renewal",
+      "mode": "automated",
+      "operation": "resolve",
+      "input": {
+        "ref": "../../examples/context-handle.json",
+        "mutations": [
+          { "op": "replace", "path": "/expires_at", "value": "2026-11-10T09:00:00Z" }
+        ]
+      },
+      "expect": {
+        "outcome": "reject",
+        "error": "CONTEXT_EXPIRED"
+      },
+      "notes": "Handles MUST NOT renew automatically (standard.md §9.3)."
+    },
+    {
+      "id": "C5-03",
+      "level": "C5",
+      "title": "derived object may not lower its information-flow label",
+      "mode": "automated",
+      "operation": "resolve",
+      "input": {
+        "ref": "../../examples/context-handle.json",
+        "mutations": [
+          { "op": "replace", "path": "/label", "value": "public" }
+        ],
+        "params": {
+          "source_labels": { "obj://sha256:9f2c7b1a": "sensitive" }
+        }
+      },
+      "expect": {
+        "outcome": "observe",
+        "notes": "A derived object MUST inherit at least the source label; rejecting the derivation or raising the label to sensitive are both conforming (§9.4)."
+      }
+    },
+    {
+      "id": "C5-04",
+      "level": "C5",
+      "title": "secret data egress without user approval is rejected",
+      "mode": "automated",
+      "operation": "resolve",
+      "input": {
+        "ref": "../../examples/context-handle.json",
+        "mutations": [
+          { "op": "replace", "path": "/label", "value": "secret" }
+        ],
+        "params": {
+          "egress": true,
+          "user_approval": false
+        }
+      },
+      "expect": {
+        "outcome": "reject",
+        "error": "POLICY_CONSENT_REQUIRED"
+      },
+      "notes": "secret MUST NOT leave the device without explicit user approval (standard.md §9.4, §9.8)."
+    },
+    {
+      "id": "C5-05",
+      "level": "C5",
+      "title": "task end clears or archives the blackboard without promoting it to memory",
+      "mode": "automated",
+      "operation": "cancel",
+      "input": {
+        "ref": "../../examples/blackboard.json",
+        "params": { "task_ended": true }
+      },
+      "expect": {
+        "outcome": "accept",
+        "state": {
+          "cleared_or_archived": true,
+          "promoted_to_memory": false
+        }
+      },
+      "notes": "The blackboard lifetime equals the task lifetime; it MUST NOT become long-term memory automatically (standard.md §9.5)."
+    },
+    {
+      "id": "C5-06",
+      "level": "C5",
+      "title": "deleting a referenced object checks references and writes an audit event",
+      "mode": "automated",
+      "operation": "delete",
+      "input": {
+        "ref": "../../examples/context-handle.json",
+        "params": {
+          "object": "obj://sha256:9f2c7b1a",
+          "reference_count": 2,
+          "hard_delete": false
+        }
+      },
+      "expect": {
+        "outcome": "observe",
+        "notes": "The report MUST show a reference check and an audit event; hard-deleting a referenced object is non-conforming (§9.6, §9.7)."
+      }
+    },
+    {
+      "id": "C5-07",
+      "level": "C5",
+      "title": "cache entry does not outlive the handle TTL",
+      "mode": "automated",
+      "operation": "cache",
+      "input": {
+        "ref": "../../examples/context-handle.json",
+        "params": {
+          "cache_ttl": 900,
+          "elapsed_seconds": 700
+        }
+      },
+      "expect": {
+        "outcome": "accept",
+        "state": { "cache_hit": false }
+      },
+      "notes": "The handle allows 600 s; a cache requesting 900 s MUST be clamped to the handle TTL (§9.7)."
+    },
+    {
+      "id": "C5-08",
+      "level": "C5",
+      "title": "managed_store without quota or garbage collection is inconsistent",
+      "mode": "automated",
+      "operation": "declare",
+      "input": {
+        "params": {
+          "cf_mode": "managed_store",
+          "declares_quota": false,
+          "declares_gc": false
+        }
+      },
+      "expect": {
+        "outcome": "observe",
+        "notes": "Claiming managed_store requires quota, GC, crash recovery, encryption, and deletion duties (standard.md §9.10)."
+      }
+    },
+    {
+      "id": "C5-09",
+      "level": "C5",
+      "title": "handle resolution cannot bypass OS file permissions",
+      "mode": "automated",
+      "operation": "resolve",
+      "input": {
+        "ref": "../../examples/context-handle.json",
+        "mutations": [
+          { "op": "replace", "path": "/handle", "value": "file://fh_01J9Z6Q3V8N2K4M7P1R5T0WX77" },
+          { "op": "replace", "path": "/scheme", "value": "file" }
+        ],
+        "params": { "os_permission": "denied" }
+      },
+      "expect": {
+        "outcome": "reject",
+        "error": "CONTEXT_DENIED"
+      },
+      "notes": "CF MUST NOT use handles to bypass the OS sandbox or file permissions (standard.md §9.9)."
+    },
+    {
+      "id": "C5-10",
+      "level": "C5",
+      "title": "task capability does not grant long-term memory reads",
+      "mode": "automated",
+      "operation": "resolve",
+      "input": {
+        "ref": "../../examples/context-handle.json",
+        "mutations": [
+          { "op": "replace", "path": "/handle", "value": "ctx://user/memory/preferences" },
+          { "op": "replace", "path": "/scope", "value": "user" }
+        ],
+        "params": { "granted_actions": ["task.read"] }
+      },
+      "expect": {
+        "outcome": "reject",
+        "error": "CONTEXT_DENIED"
+      },
+      "notes": "Reading long-term memory requires a separate memory.read grant (standard.md §9.3)."
+    },
+    {
+      "id": "C5-11",
+      "level": "C5",
+      "title": "idempotency index, audit log, and task tree are not memory retrieval",
+      "mode": "automated",
+      "operation": "declare",
+      "input": {
+        "params": {
+          "memory_query_sources": ["idempotency_index", "audit_log", "task_tree"]
+        }
+      },
+      "expect": {
+        "outcome": "observe",
+        "notes": "Task boards, object metadata, audit logs, and Bus state MUST NOT be promoted to long-term memory (standard.md §3.7, §9.3)."
+      }
+    }
+  ]
+}

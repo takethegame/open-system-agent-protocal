@@ -44,6 +44,9 @@
         "discover",
         "index",
         "resolve",
+        "delete",
+        "cache",
+        "declare",
         "restart",
         "replay",
         "export"

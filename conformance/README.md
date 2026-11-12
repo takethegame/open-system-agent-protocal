@@ -38,7 +38,7 @@ conformance/
 | `title` | ✅ | 一句话描述，英文 |
 | `mode` | | `automated`（默认）或 `manual` |
 | `preconditions` | | 运行前必须成立的状态 |
-| `operation` | | `handshake` / `register` / `send` / `frame` / `use` / `attenuate` / `delegate` / `handoff` / `cancel` / `discover` / `index` / `resolve` / `restart` / `replay` / `export` / `clock` |
+| `operation` | | `handshake` / `register` / `send` / `frame` / `use` / `attenuate` / `delegate` / `handoff` / `cancel` / `discover` / `index` / `resolve` / `delete` / `cache` / `declare` / `restart` / `replay` / `export` / `clock` |
 | `input` | automated 必填 | 见下 |
 | `steps` | manual 必填 | 人工执行步骤 |
 | `expect` | ✅ | 见下 |
