@@ -13,7 +13,7 @@
 | 里程碑 | 状态 | 进度 | 完成日期 |
 |---|---|---|---|
 | M0 仓库可信化 | ✅ 完成 | 7/7 | 2026-11-12 |
-| M1 可执行一致性 | 🟡 进行中 | 31/68 用例（46%） | — |
+| M1 可执行一致性 | 🟡 进行中 | 42/68 用例（62%） | — |
 | M2 参考实现 MVP | ⬜ 未开始 | 0/7 子阶段 | — |
 | M3 形式化不变量 | ⬜ 未开始 | 0/4 定理 | — |
 | M4 标准打包 | ⬜ 未开始 | 0/4 产出 | — |
@@ -26,7 +26,7 @@
 | 规范正文 | 131 节 |
 | JSON Schema | 12（协议）+ 3（一致性：case / suite / report）= 15 |
 | 示例 | 14 |
-| 一致性用例 | 31 / 68 |
+| 一致性用例 | 42 / 68 |
 | 校验工具 | 4 |
 | Markdown 文件 | 20 |
 | 中英平行文档 | 8 对 |
@@ -44,7 +44,10 @@
 | `d932070` | 2026-11-11 | 英文平行译本（7 个 `*.en.md`） |
 | `1d38d32` | 2026-11-12 | **M0**：CI、安全策略、变更记录、路线图 |
 | `f8e13bd` | 2026-11-12 | **M1（部分）**：C0 + C3 共 19 条可执行用例 |
+| `93f0d4e` | 2026-11-12 | 创建 `docs/progress.md`，拆分剩余用例 |
 | `ba31745` | 2026-11-12 | **M1（续）**：C1 + C2 共 12 条，`examples/hello.json` |
+| `043806f` | 2026-11-12 | 进展文档更新到 31/68 |
+| `a34ec0f` | 2026-11-12 | **M1（续）**：C4 共 11 条；envelope 增加 peer/`session_id` 条件 |
 
 ---
 
@@ -110,6 +113,7 @@ CI：
 | `conformance/cases/C1-identity.json` | 110 | 6 条（5 automated，1 `observe`） |
 | `conformance/cases/C2-registry.json` | 109 | 6 条（4 automated，1 `observe`，1 manual） |
 | `conformance/cases/C3-authorization.json` | 220 | 12 条（全 automated） |
+| `conformance/cases/C4-collaboration.json` | 223 | 11 条（8 automated，3 manual） |
 | `examples/hello.json` | 20 | 注册夹具（`osap.hello/v1`） |
 | `tools/conformance_run.py` | 361 | 加载、校验、变异、执行、报告 |
 
@@ -121,11 +125,11 @@ CI：
 | C1 Identity | 6 | 6 | ✅ |
 | C2 Registry | 6 | 6 | ✅ |
 | C3 Authorization | 12 | 12 | ✅ |
-| C4 Collaboration | 0 | 11 | ⬜ |
+| C4 Collaboration | 11 | 11 | ✅ |
 | C5 Context | 0 | 11 | ⬜ |
 | C6 Federation | 0 | 8 | ⬜ |
 | C7 Full | 0 | 7 | ⬜ |
-| **合计** | **31** | **68** | **46%** |
+| **合计** | **42** | **68** | **62%** |
 
 ### 4.3 设计决定
 
@@ -145,10 +149,10 @@ CI：
 python3 tools/check_schemas.py              → OK: 45 checks passed across 15 schemas
 python3 tools/validate_examples.py          → OK: 20 checks passed
 python3 tools/check_docs.py                 → OK: 104 checks passed across 20 Markdown files
-python3 tools/conformance_run.py --stub     → 31 cases [C0, C1, C2, C3]: 0 pass, 0 fail, 31 skip
+python3 tools/conformance_run.py --stub     → 42 cases [C0, C1, C2, C3, C4]: 0 pass, 0 fail, 42 skip
 ```
 
-临时回显适配器（不随仓库发布）验证完整链路：
+临时回显适配器（不随仓库发布）验证完整链路（C0–C3 共 19 条时）：
 
 | 场景 | 结果 |
 |---|---|
@@ -166,26 +170,11 @@ python3 tools/conformance_run.py --stub     → 31 cases [C0, C1, C2, C3]: 0 pas
 4. **适配器 API 未冻结**：`conformance_check(case, documents)` 可能在 M2 中调整。
 5. **`observe` 用例需要人工判定**：报告只记录实际结果，不产生 pass/fail。
 6. **注册表错误码是近似映射**：C2-01 / C2-06 使用 `SCHEMA_INVALID`，但规范没有为注册表索引单独定义错误码；用例真正断言的是“索引 MUST 失败”，`notes` 已注明实现可返回领域前缀错误码。
+7. **部分状态通过 `params` 模拟**：C4-07（已消耗预算）、C4-10（handoff 后的 owner）、C4-11（handoff 被拒绝）用 `params` 声明运行时前置状态，适配器需自行解释。这类用例可执行，但不如真实运行时模型严格。
 
-### 4.6 剩余 37 条用例拆分
+### 4.6 剩余 26 条用例拆分
 
 预估口径：**S** < 1 小时（直接变异现有夹具），**M** 1–2 小时（需补充夹具或多文档状态），**L** > 2 小时（需运行时状态或人工步骤）。
-
-#### C4 — Collaboration（11 条，依赖任务与 handoff 夹具）
-
-| ID | 场景 | 所需夹具/操作 | 方式 | 预估 |
-|---|---|---|---|---|
-| C4-01 | 父任务取消 | 需任务树运行时状态 | manual | L |
-| C4-02 | 子预算超父剩余 | `delegate.json` 改 `/body/data/budget` | automated | M |
-| C4-03 | 结果 schema 不匹配 | `result.json` 改 `/body/schema` | automated | S |
-| C4-04 | peer 无 `session_id` | `request.json` 删除 `/session_id` | automated | S |
-| C4-05 | peer 使用对方能力 | `request.json` + `delegate.json` 组合 | automated | M |
-| C4-06 | handoff 未重新同意 L3 | `handoff.json` 去回执 + `risk=L3` | automated | M |
-| C4-07 | 超预算 | 需累计消耗状态 | automated | M |
-| C4-08 | Bus 重启后未完成任务 | 需重启流程与审计断言 | manual | L |
-| C4-09 | 副作用前崩溃（只有 intent） | 需 intent/outcome 状态 | manual | L |
-| C4-10 | handoff 后原 owner 仍发请求 | 需所有权状态 | automated | M |
-| C4-11 | handoff 被拒绝 | 需状态与预算快照 | automated | M |
 
 #### C5 — Context（11 条，当前完全没有夹具）
 
@@ -228,7 +217,7 @@ python3 tools/conformance_run.py --stub     → 31 cases [C0, C1, C2, C3]: 0 pas
 | C7-06 | L3 只有 intent 无 outcome | 需 intent/outcome 状态 | manual | M |
 | C7-07 | 被攻破的 Bus | 0.1 明确失败 | manual | M |
 
-**总量估算**：S 7 条、M 25 条、L 5 条，合计约 **25–33 小时**。
+**总量估算**：S 5 条、M 20 条、L 1 条，合计约 **15–20 小时**。
 
 ### 4.7 夹具缺口
 
@@ -244,11 +233,10 @@ C2/C4/C6 可复用现有 `manifest.json`、`discovery-result.json`、`capability
 
 ### 4.8 迁移顺序建议
 
-1. **C4（11 条）**：先做 6 条 automated（C4-02–04、06、10、11），3 条 manual 留到 M2；
-2. **C6（8 条）**：一次性覆盖 6 种 source kind，可复用 `capability-record.json`；
-3. **C5（11 条）**：先补 `context-handle.json` 与 `blackboard.json`；
-4. **C7（7 条）**：补 `audit-chain.json`，依赖 M2 的运行时可观测性；
-5. M1 收尾后进入 M2.1（信封 + 错误模型）。
+1. **C6（8 条）**：一次性覆盖 6 种 `source.kind`，可复用 `capability-record.json`；
+2. **C5（11 条）**：先补 `context-handle.json` 与 `blackboard.json`；
+3. **C7（7 条）**：补 `audit-chain.json`，依赖 M2 的运行时可观测性；
+4. M1 收尾后进入 M2.1（信封 + 错误模型）。
 
 ---
 
@@ -260,6 +248,7 @@ C2/C4/C6 可复用现有 `manifest.json`、`discovery-result.json`、`capability
 |---|---|---|---|
 | C1-05 | 密钥轮换后旧签名“按策略”拒绝，缺少最低要求 | 写为 `observe`，建议 §4.5 补“过渡期 MUST 不超过 TTL” | ⬜ 待定 |
 | C2-05 | “TTL 内失效”未说明失效上限 | 以 `freshness.expires_at` 为唯一判据 | ✅ 已采用 |
+| C4-02 | 委派预算超过父剩余时应返回哪个错误码未定义 | 暂用 `POLICY_DENIED`，用例断言“拒绝委派”这一不变量 | ⬜ 待定 |
 | C5-11 | “幂等索引/审计日志/任务树”如何判定被当记忆检索 | 依赖实现自证，标 `observe` | ⬜ 待定 |
 | C7-07 | “被攻破的 Bus”在 0.1 的期望不明确 | 明确为“0.1 不提供该防护”，用例只记录 | ⬜ 待定 |
 
@@ -267,11 +256,10 @@ C2/C4/C6 可复用现有 `manifest.json`、`discovery-result.json`、`capability
 
 ## 6. 下一步（按顺序）
 
-1. 迁移 C4 的 6 条 automated（C4-02–04、06、10、11）；
-2. 迁移 C6 的 8 条，重点覆盖 6 种 `source.kind`；
-3. 补 `context-handle.json` 与 `blackboard.json`，迁移 C5 的 11 条；
-4. 补 `audit-chain.json`，迁移 C7 的 7 条；
-5. M1 达到 68/68 后进入 M2.1。
+1. 迁移 C6 的 8 条，重点覆盖 6 种 `source.kind`；
+2. 补 `context-handle.json` 与 `blackboard.json`，迁移 C5 的 11 条；
+3. 补 `audit-chain.json`，迁移 C7 的 7 条；
+4. M1 达到 68/68 后进入 M2.1。
 
 ---
 
@@ -281,3 +269,4 @@ C2/C4/C6 可复用现有 `manifest.json`、`discovery-result.json`、`capability
 |---|---|
 | 2026-11-12 | 创建本文；记录 M0 完成、M1 达到 19/68、剩余用例拆分 |
 | 2026-11-12 | M1 扩展到 31/68（C1 6 条、C2 6 条）；补 `examples/hello.json`；登记注册表错误码近似映射 |
+| 2026-11-12 | M1 扩展到 42/68（C4 11 条）；envelope 增加 peer/`session_id` 条件；登记 `params` 状态模拟与委派预算错误码问题 |
