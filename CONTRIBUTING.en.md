@@ -18,7 +18,7 @@ licensed under the **Apache License 2.0**, and require a **DCO sign-off**.
 
 ```bash
 python3 tools/validate_examples.py
-# OK: 20 checks passed
+# OK: 24 checks passed
 ```
 
 5. For the change process, review requirements, and versioning rules, see [`GOVERNANCE.md`](GOVERNANCE.en.md).

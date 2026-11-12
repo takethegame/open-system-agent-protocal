@@ -36,6 +36,7 @@ MAPPING = {
     "delegate.json": "envelope.schema.json",
     "handoff.json": "envelope.schema.json",
     "consent-request.json": "envelope.schema.json",
+    "hello.json": "envelope.schema.json",
 }
 
 # Envelope examples whose body.data is validated against a payload schema.
@@ -104,6 +105,14 @@ def main() -> int:
         checks += 1
         for error in validate(delegated, capability, registry):
             failures.append(f"{example_name} [capability.schema.json] {error}")
+
+    # Cross-document check: every event in the sample audit chain is a valid audit event.
+    chain = load(EXAMPLES / "audit-chain.json")
+    audit_schema = load(SCHEMAS / "audit-event.schema.json")
+    for index, event in enumerate(chain["events"]):
+        checks += 1
+        for error in validate(event, audit_schema, registry):
+            failures.append(f"audit-chain.json [event {index}] {error}")
 
     if failures:
         print("FAIL")

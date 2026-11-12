@@ -13,7 +13,7 @@
 | 里程碑 | 状态 | 进度 | 完成日期 |
 |---|---|---|---|
 | M0 仓库可信化 | ✅ 完成 | 7/7 | 2026-11-12 |
-| M1 可执行一致性 | 🟡 进行中 | 61/68 用例（90%） | — |
+| M1 可执行一致性 | ✅ 完成 | 68/68 用例（100%） | 2026-11-12 |
 | M2 参考实现 MVP | ⬜ 未开始 | 0/7 子阶段 | — |
 | M3 形式化不变量 | ⬜ 未开始 | 0/4 定理 | — |
 | M4 标准打包 | ⬜ 未开始 | 0/4 产出 | — |
@@ -25,8 +25,8 @@
 |---|---|
 | 规范正文 | 131 节 |
 | JSON Schema | 12（协议）+ 3（一致性：case / suite / report）= 15 |
-| 示例 | 16 |
-| 一致性用例 | 61 / 68 |
+| 示例 | 17 |
+| 一致性用例 | 68 / 68 |
 | 校验工具 | 4 |
 | Markdown 文件 | 20 |
 | 中英平行文档 | 8 对 |
@@ -50,6 +50,7 @@
 | `a34ec0f` | 2026-11-12 | **M1（续）**：C4 共 11 条；envelope 增加 peer/`session_id` 条件 |
 | `b3b8ab5` | 2026-11-12 | **M1（续）**：C6 共 8 条（7 automated，1 manual） |
 | `74a41ce` | 2026-11-12 | **M1（续）**：C5 共 11 条；新增上下文句柄与黑板夹具 |
+| `012c9c7` | 2026-11-12 | **M1 完成**：C7 共 7 条；新增审计链夹具；报告纳入 schema 校验 |
 
 ---
 
@@ -101,7 +102,7 @@ CI：
 
 ---
 
-## 4. M1 — 可执行一致性（进行中）
+## 4. M1 — 可执行一致性（已完成）
 
 ### 4.1 交付物
 
@@ -118,10 +119,12 @@ CI：
 | `conformance/cases/C4-collaboration.json` | 223 | 11 条（8 automated，3 manual） |
 | `conformance/cases/C5-context.json` | 215 | 11 条（全 automated，其中 4 条 `observe`） |
 | `conformance/cases/C6-federation.json` | 236 | 8 条（7 automated，1 manual） |
+| `conformance/cases/C7-full.json` | 144 | 7 条（6 automated，1 manual） |
 | `examples/hello.json` | 20 | 注册夹具（`osap.hello/v1`） |
 | `examples/context-handle.json` | 19 | 上下文句柄夹具（标签、TTL、scope） |
 | `examples/blackboard.json` | 23 | 任务黑板夹具（条目、版本、TTL） |
-| `tools/conformance_run.py` | 361 | 加载、校验、变异、执行、报告 |
+| `examples/audit-chain.json` | 52 | 3 条链式审计事件，止于 `effect.intent` |
+| `tools/conformance_run.py` | 372 | 加载、校验、变异、执行、报告、报告 schema 校验 |
 
 ### 4.2 覆盖情况
 
@@ -134,8 +137,8 @@ CI：
 | C4 Collaboration | 11 | 11 | ✅ |
 | C5 Context | 11 | 11 | ✅ |
 | C6 Federation | 8 | 8 | ✅ |
-| C7 Full | 0 | 7 | ⬜ |
-| **合计** | **61** | **68** | **90%** |
+| C7 Full | 7 | 7 | ✅ |
+| **合计** | **68** | **68** | **100%** |
 
 ### 4.3 设计决定
 
@@ -153,9 +156,12 @@ CI：
 
 ```
 python3 tools/check_schemas.py              → OK: 45 checks passed across 15 schemas
-python3 tools/validate_examples.py          → OK: 20 checks passed
+python3 tools/validate_examples.py          → OK: 24 checks passed
 python3 tools/check_docs.py                 → OK: 104 checks passed across 20 Markdown files
-python3 tools/conformance_run.py --stub     → 61 cases [C0, C1, C2, C3, C4, C5, C6]: 0 pass, 0 fail, 61 skip
+python3 tools/conformance_run.py --stub     → 68 cases [C0, C1, C2, C3, C4, C5, C6, C7]: 0 pass, 0 fail, 68 skip
+python3 tools/conformance_run.py --stub --format json --out conformance-report.json
+                                            → summary: 68 total, 0 pass, 0 fail, 68 skip
+                                            → report 通过 report.schema.json 校验
 ```
 
 临时回显适配器（不随仓库发布）验证完整链路（C0–C3 共 19 条时）：
@@ -178,45 +184,51 @@ python3 tools/conformance_run.py --stub     → 61 cases [C0, C1, C2, C3, C4, C5
 6. **注册表错误码是近似映射**：C2-01 / C2-06 使用 `SCHEMA_INVALID`，但规范没有为注册表索引单独定义错误码；用例真正断言的是“索引 MUST 失败”，`notes` 已注明实现可返回领域前缀错误码。
 7. **部分状态通过 `params` 模拟**：C4-07（已消耗预算）、C4-10（handoff 后的 owner）、C4-11（handoff 被拒绝）用 `params` 声明运行时前置状态，适配器需自行解释。这类用例可执行，但不如真实运行时模型严格。
 8. **上下文夹具没有 JSON Schema**：`context-handle.json` 与 `blackboard.json` 的字段取自 §9.3–§9.5，但规范未定义 wire format，因此不纳入 `validate_examples.py`。字段调整不会触发 schema 校验。
+9. **审计链错误码是扩展码**：C7-02 使用 `AUDIT_CHAIN_INVALID`，规范只要求“校验失败”，没有定义审计专用错误码。该码属于领域扩展命名空间，已在 `notes` 注明。
 
-### 4.6 剩余 7 条用例拆分
+### 4.6 用例分布（迁移完成）
 
-预估口径：**S** < 1 小时（直接变异现有夹具），**M** 1–2 小时（需补充夹具或多文档状态），**L** > 2 小时（需运行时状态或人工步骤）。
+| 维度 | 数量 | 说明 |
+|---|---|---|
+| 总数 | 68 | C0 7 + C1 6 + C2 6 + C3 12 + C4 11 + C5 11 + C6 8 + C7 7 |
+| automated | 60 | 其中 7 条为 `observe` |
+| manual | 8 | C0-01、C0-06、C2-05、C4-01、C4-08、C4-09、C6-08、C7-01 |
+| `observe` | 14 | 7 条 automated + 7 条 manual |
 
-#### C7 — Full（7 条，偏集成与人工）
-
-| ID | 场景 | 所需夹具/操作 | 方式 | 预估 |
-|---|---|---|---|---|
-| C7-01 | 跨 3 个 App 的任务 | 需完整 trace | manual | L |
-| C7-02 | 审计链篡改 | `audit-chain.json` 改 `/prev_hash` | automated | S |
-| C7-03 | 用户导出审计 | 需导出与脱敏规则 | automated | M |
-| C7-04 | 跨用户请求 | 需多主体状态 | automated | M |
-| C7-05 | 回放不重复副作用 | 需幂等索引状态 | automated | M |
-| C7-06 | L3 只有 intent 无 outcome | 需 intent/outcome 状态 | manual | M |
-| C7-07 | 被攻破的 Bus | 0.1 明确失败 | manual | M |
-
-**总量估算**：S 1 条、M 5 条、L 1 条，合计约 **4–6 小时**。
+手动用例集中在三类：传输/时钟运行时（C0）、TTL 与生命周期（C2、C6）、崩溃与跨 App 集成（C4、C7）。`observe` 用例不产生自动判定，报告只记录实现的实际行为。
 
 ### 4.7 夹具缺口
 
-`hello.json`、`context-handle.json`、`blackboard.json` 已补齐。仍缺：
+全部夹具已就位：
 
-| 夹具 | 用于 | 内容要点 | 状态 |
-|---|---|---|---|
-| `audit-chain.json` | C7-02 | 至少 3 条带 `prev_hash` 的事件 | ⬜ |
+| 夹具 | 用于 | 状态 |
+|---|---|---|
+| `hello.json` | C1 | ✅ |
+| `context-handle.json` | C5 | ✅ |
+| `blackboard.json` | C5 | ✅ |
+| `audit-chain.json` | C7 | ✅ |
 
-C2/C4/C6 可复用现有 `manifest.json`、`discovery-result.json`、`capability-record.json`、`task.json`、`delegate.json`、`handoff.json`、`result.json`。
+C2/C4/C6 复用 `manifest.json`、`discovery-result.json`、`capability-record.json`、`task.json`、`delegate.json`、`handoff.json`、`result.json`。
 
-### 4.8 迁移顺序建议
+### 4.8 M1 退出标准
 
-1. **C7（7 条）**：先补 `audit-chain.json`，其余依赖 M2 的运行时可观测性；
-2. M1 收尾后进入 M2.1（信封 + 错误模型）。
+- [x] 68 个用例全部可加载，case / suite schema 校验通过；
+- [x] `--stub` 输出 68 条 `skip`；
+- [x] JSON 报告通过 `report.schema.json` 校验；
+- [x] CI 同时运行用例检查与报告校验。
+
+后续工作（不属于 M1 退出标准）：
+
+- 用真实适配器跑通 C0–C3（M2）；
+- 冻结适配器 API（M2.1）。
+
+之后进入 M2.1（信封 + 错误模型）。
 
 ---
 
 ## 5. 待确认的规范问题
 
-迁移过程中暴露的歧义，需在 M1 结束前定稿（不改编号，只补语义）：
+迁移过程中暴露的歧义。M1 用例已按暂定处理落盘，以下条目需在 M2 冻结适配器 API 前定稿（不改编号，只补语义）：
 
 | 编号 | 问题 | 处理 | 状态 |
 |---|---|---|---|
@@ -225,14 +237,16 @@ C2/C4/C6 可复用现有 `manifest.json`、`discovery-result.json`、`capability
 | C4-02 | 委派预算超过父剩余时应返回哪个错误码未定义 | 暂用 `POLICY_DENIED`，用例断言“拒绝委派”这一不变量 | ⬜ 待定 |
 | C5-11 | “幂等索引/审计日志/任务树”如何判定被当记忆检索 | 依赖实现自证，标 `observe` | ⬜ 待定 |
 | C6-07 | `origin=external` 在 `capability-record.schema.json` 中没有对应字段 | 用例把 `origin` 作为投影后的规范化输出断言；是否写入 schema 待定 | ⬜ 待定 |
+| C7-02 | 审计链校验失败没有标准错误码 | 暂用扩展码 `AUDIT_CHAIN_INVALID`，用例断言“校验 MUST 失败” | ⬜ 待定 |
 | C7-07 | “被攻破的 Bus”在 0.1 的期望不明确 | 明确为“0.1 不提供该防护”，用例只记录 | ⬜ 待定 |
 
 ---
 
 ## 6. 下一步（按顺序）
 
-1. 补 `audit-chain.json`，迁移 C7 的 7 条；
-2. M1 达到 68/68 后进入 M2.1。
+1. 以 M1 用例为验收标准进入 M2.1：信封 + 错误模型；
+2. 在 M2 中把临时回显适配器替换为真实实现，先跑通 C0–C3；
+3. 根据实现反馈修正规范歧义，再冻结适配器 API。
 
 ---
 
@@ -245,3 +259,4 @@ C2/C4/C6 可复用现有 `manifest.json`、`discovery-result.json`、`capability
 | 2026-11-12 | M1 扩展到 42/68（C4 11 条）；envelope 增加 peer/`session_id` 条件；登记 `params` 状态模拟与委派预算错误码问题 |
 | 2026-11-12 | M1 扩展到 50/68（C6 8 条）；登记 `origin` 在能力记录 schema 中缺少字段的问题 |
 | 2026-11-12 | M1 扩展到 61/68（C5 11 条）；新增 `context-handle.json` 与 `blackboard.json`；登记夹具无 schema 的限制 |
+| 2026-11-12 | **M1 完成**：68/68；新增 C7 与 `audit-chain.json`；JSON 报告纳入 schema 校验 |

@@ -11,8 +11,8 @@ Entries are written in English to match commit messages; the Chinese text in
 
 ### Added
 
-- `conformance/`: machine-readable cases for C0 (7), C1 (6), C2 (6), C3 (12), C4 (11), C5 (11), and C6 (8), plus `case.schema.json`, `suite.schema.json`, `report.schema.json`, and `README.md`.
-- `examples/context-handle.json` and `examples/blackboard.json`: context-fabric fixtures for label, TTL, scope, and task-blackboard cases.
+- `conformance/`: machine-readable cases for C0 (7), C1 (6), C2 (6), C3 (12), C4 (11), C5 (11), C6 (8), and C7 (7), plus `case.schema.json`, `suite.schema.json`, `report.schema.json`, and `README.md`.
+- `examples/context-handle.json`, `examples/blackboard.json`, and `examples/audit-chain.json`: context-fabric and audit-chain fixtures.
 - `tools/conformance_run.py`: loads and validates cases, applies JSON Pointer mutations, runs an implementation adapter, and emits text, JSON, or Markdown reports.
 - `docs/roadmap.md`: milestone plan from 0.1 to 0.2 (M0–M5, decision gates, risk register).
 - `SECURITY.md` / `SECURITY.en.md`: disclosure channel, timelines, security review triggers.
@@ -26,10 +26,11 @@ Entries are written in English to match commit messages; the Chinese text in
 - Repository renamed from `open-system-agent-protocal` to `open-system-agent-protocol`; the GitHub URL, local directory, `origin` remote, and CI badge links were updated accordingly.
 - `CONTRIBUTING.md` / `CONTRIBUTING.en.md`: state that the Chinese text is the normative original and `*.en.md` files are parallel translations.
 - `schemas/envelope.schema.json`: require `session_id` when `task.mode` is `peer`, matching standard §8.4.
+- `tools/conformance_run.py`: JSON output is now validated against `report.schema.json`; CI runs the same check.
 
 ### Planned
 
-- M1: migrate the remaining C7 cases (7 of 68).
+- M2: reference implementation for the C0–C3 envelope, identity, registry, and authorization paths.
 
 ## [0.1.0] - 2026-11-10
 

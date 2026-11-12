@@ -24,9 +24,9 @@
 |---|---|
 | 规范正文 | `docs/standard.md`，131 节，0.1 Draft |
 | JSON Schema | 12 个（envelope、capability、task、manifest、capability-record、consent-receipt、consent-request、audit-event、discover、discover-result、delegate、handoff） |
-| 示例 | 16 个（14 个通过 schema 校验，2 个为无 schema 的上下文夹具） |
-| 一致性用例 | 68 个（C0:7、C1:6、C2:6、C3:12、C4:11、C5:11、C6:8、C7:7），其中 61 个已机器可读 |
-| 校验工具 | `tools/validate_examples.py`，输出 `OK: 20 checks passed` |
+| 示例 | 17 个（14 个通过 schema 校验，3 个为无独立 schema 的夹具） |
+| 一致性用例 | 68 个（C0:7、C1:6、C2:6、C3:12、C4:11、C5:11、C6:8、C7:7），全部已机器可读 |
+| 校验工具 | `tools/validate_examples.py`，输出 `OK: 24 checks passed` |
 | 文档 | 7 组中英文平行版本 |
 | 许可 | Apache-2.0 + DCO 1.1 |
 | 参考实现 | **0** |
@@ -51,7 +51,7 @@
 | 里程碑 | 目标 | 主要交付物 | 退出标准 | 工作量 | 目标日期 |
 |---|---|---|---|---|---|
 | **M0** 仓库可信化 | 让外部人能一键验证 | CI、`.gitignore`、`CHANGELOG`、`SECURITY`、改名 | CI 在干净 checkout 上全绿 | 2 天 | 2026-11-14 |
-| **M1** 可执行一致性 | 68 个用例变成机器可读 | `conformance/cases/`、runner、报告格式 | 68/68 用例可加载并可判定 | 4 天 | 2026-11-20 |
+| **M1** 可执行一致性 | 68 个用例变成机器可读 | `conformance/cases/`、runner、报告格式 | 68/68 用例可加载，报告通过 schema 校验 | 4 天 | 2026-11-20 |
 | **M2** 参考实现 MVP | 跑通 C0–C3 + C4 主路径 | `impl/` 最小实现、2 App + 1 Agent 演示 | C0–C3 全绿，C4 主路径通过 | 4 周 | 2026-12-18 |
 | **M3** 形式化不变量 | 证明权威单调性 | TLA+ 或 Alloy 模型 + 4 条定理 | 模型检查无违例 | 2 周 | 2026-12-31 |
 | **M4** 标准打包 | 拆成可提交材料 | 2 个 IETF draft + Linux binding + ADR | 草案可独立阅读、无悬空引用 | 3 周 | 2027-01-30 |
@@ -123,7 +123,7 @@ conformance/
     C4-collaboration.json   已完成（11）
     C5-context.json         已完成（11）
     C6-federation.json      已完成（8）
-    C7-full.json            待迁移
+    C7-full.json            已完成（7）
 tools/
   conformance_run.py        加载 → 校验 → 应用 mutation → 调用适配器 → 生成报告
 ```
@@ -151,7 +151,7 @@ tools/
 **任务**
 
 - [x] 定义用例 JSON Schema（`case` / `suite` / `report`）并纳入 CI
-- [ ] 把 68 个用例逐条迁移，保持 ID 与 `docs/conformance.md` 一致（已完成 61：C0 7 + C1 6 + C2 6 + C3 12 + C4 11 + C5 11 + C6 8）
+- [x] 把 68 个用例逐条迁移，保持 ID 与 `docs/conformance.md` 一致（68/68：C0 7 + C1 6 + C2 6 + C3 12 + C4 11 + C5 11 + C6 8 + C7 7）
 - [x] mutation 引擎（内置在 runner：`replace` / `add` / `remove` / `extend` / `truncate`）
 - [x] 实现 `conformance_run.py`：
   - [x] `--impl` 适配器接口（Python 文件，暴露 `conformance_check`）
@@ -160,21 +160,21 @@ tools/
   - [x] 未实现的能力标记 `skip` 而非 `fail`
 - [x] 用 `--stub` 代替独立的 stub 实现（无适配器时全部 `skip`）
 - [x] 在 `docs/conformance.md` 增加“结构 / 格式 / 运行”三节（3.1–3.3，编号不变）
-- [ ] 迁移 C7 剩余 7 个用例
+- [x] 迁移 C7 剩余 7 个用例
 
-**当前状态**：61/68（C0 7 + C1 6 + C2 6 + C3 12 + C4 11 + C5 11 + C6 8）。`--stub` 输出
+**当前状态**：68/68（C0 7 + C1 6 + C2 6 + C3 12 + C4 11 + C5 11 + C6 8 + C7 7）。`--stub` 输出
 
 ```
-61 cases [C0, C1, C2, C3, C4, C5, C6]: 0 pass, 0 fail, 61 skip
+68 cases [C0, C1, C2, C3, C4, C5, C6, C7]: 0 pass, 0 fail, 68 skip
 ```
 
-用临时回显适配器验证过 C0–C3 的完整链路（19 条中 17 pass、2 条 manual skip），报告通过 `report.schema.json`。逐条拆分与夹具缺口见 [`progress.md`](progress.md) §4.6–§4.7。
+JSON 报告在 runner 内直接对照 `report.schema.json` 校验，CI 增加了对应步骤。用例分布、已知限制与规范歧义见 [`progress.md`](progress.md) §4.5–§4.6。
 
 **退出标准**
 
 - 68 个用例全部可加载，schema 校验通过；
 - 用 `--stub` 跑 runner，输出 68 条 `skip`，报告通过 schema 校验；
-- CI 中加入 `conformance_run.py --stub`。
+- CI 中加入 `conformance_run.py --stub` 与 JSON 报告校验。
 
 **注意**：`standard.md` §12.3 规定 `conformance.md` 是测试编号的唯一来源。迁移时**不得新增或重编号**；新增用例必须先改 `conformance.md`。
 
@@ -349,7 +349,7 @@ tools/
 1. 建 `.gitignore`、`requirements.txt`、`SECURITY.md`、`CHANGELOG.md`
 2. 建 `.github/workflows/ci.yml`，把现有校验脚本接进去
 3. 定义 `conformance/case.schema.json`
-4. 迁移 C0–C6 七个用例文件（共 61 条）作为样板
+4. 迁移 C0–C7 八个用例文件（共 68 条）
 5. 写 `conformance_run.py` 的 `--stub` 模式
 6. 仓库改名为 `protocol`，更新 README 徽章
 7. 在 `docs/conformance.md` 加一节指向 `conformance/cases/`
