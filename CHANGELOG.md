@@ -11,7 +11,8 @@ Entries are written in English to match commit messages; the Chinese text in
 
 ### Added
 
-- `conformance/`: machine-readable cases for C0 (7), C1 (6), C2 (6), C3 (12), C4 (11), and C6 (8), plus `case.schema.json`, `suite.schema.json`, `report.schema.json`, and `README.md`.
+- `conformance/`: machine-readable cases for C0 (7), C1 (6), C2 (6), C3 (12), C4 (11), C5 (11), and C6 (8), plus `case.schema.json`, `suite.schema.json`, `report.schema.json`, and `README.md`.
+- `examples/context-handle.json` and `examples/blackboard.json`: context-fabric fixtures for label, TTL, scope, and task-blackboard cases.
 - `tools/conformance_run.py`: loads and validates cases, applies JSON Pointer mutations, runs an implementation adapter, and emits text, JSON, or Markdown reports.
 - `docs/roadmap.md`: milestone plan from 0.1 to 0.2 (M0–M5, decision gates, risk register).
 - `SECURITY.md` / `SECURITY.en.md`: disclosure channel, timelines, security review triggers.
@@ -28,7 +29,7 @@ Entries are written in English to match commit messages; the Chinese text in
 
 ### Planned
 
-- M1: migrate the remaining C5 and C7 cases (18 of 68).
+- M1: migrate the remaining C7 cases (7 of 68).
 
 ## [0.1.0] - 2026-11-10
 
