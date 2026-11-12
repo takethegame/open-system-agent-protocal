@@ -1,0 +1,109 @@
+{
+  "level": "C2",
+  "cases": [
+    {
+      "id": "C2-01",
+      "level": "C2",
+      "title": "unsigned manifest is rejected at indexing",
+      "mode": "automated",
+      "operation": "index",
+      "input": {
+        "ref": "../../examples/manifest.json",
+        "mutations": [
+          { "op": "remove", "path": "/signature" }
+        ]
+      },
+      "expect": {
+        "outcome": "reject",
+        "error": "SCHEMA_INVALID"
+      },
+      "notes": "The invariant is that indexing MUST fail; a registry-only API may surface a domain error code instead of SCHEMA_INVALID."
+    },
+    {
+      "id": "C2-02",
+      "level": "C2",
+      "title": "discovery returns capability metadata without private data",
+      "mode": "automated",
+      "operation": "discover",
+      "input": {
+        "ref": "../../examples/discovery-result.json"
+      },
+      "expect": {
+        "outcome": "accept",
+        "state": { "leaked_data": false }
+      },
+      "notes": "Candidates MUST NOT carry payload fields such as data, body, or content."
+    },
+    {
+      "id": "C2-03",
+      "level": "C2",
+      "title": "discovery returns static consent_hint, not a live policy verdict",
+      "mode": "automated",
+      "operation": "discover",
+      "input": {
+        "ref": "../../examples/discovery-result.json",
+        "mutations": [
+          { "op": "add", "path": "/body/data/candidates/0/policy_verdict", "value": "allow" },
+          { "op": "remove", "path": "/body/data/candidates/0/consent_hint" }
+        ]
+      },
+      "expect": {
+        "outcome": "observe",
+        "notes": "A response carrying policy_verdict or missing consent_hint makes the implementation non-conforming."
+      }
+    },
+    {
+      "id": "C2-04",
+      "level": "C2",
+      "title": "expired capability record is not indexed",
+      "mode": "automated",
+      "operation": "index",
+      "input": {
+        "ref": "../../examples/capability-record.json",
+        "mutations": [
+          { "op": "replace", "path": "/freshness/expires_at", "value": "2026-11-10T09:00:00Z" }
+        ]
+      },
+      "expect": {
+        "outcome": "accept",
+        "state": { "indexed": false }
+      },
+      "notes": "freshness.expires_at is the only expiry judgement; expired records MUST NOT feed authorization."
+    },
+    {
+      "id": "C2-05",
+      "level": "C2",
+      "title": "deleted native capability is invalidated within TTL",
+      "mode": "manual",
+      "operation": "index",
+      "preconditions": ["a native capability record is indexed", "its TTL has not elapsed"],
+      "steps": [
+        "delete the capability at the native source (intent/function/action)",
+        "query discovery before TTL expiry",
+        "query discovery after TTL expiry"
+      ],
+      "expect": {
+        "outcome": "observe",
+        "notes": "The record MUST stop being returned no later than TTL; both queries are recorded."
+      }
+    },
+    {
+      "id": "C2-06",
+      "level": "C2",
+      "title": "federated record without provenance is rejected",
+      "mode": "automated",
+      "operation": "index",
+      "input": {
+        "ref": "../../examples/capability-record.json",
+        "mutations": [
+          { "op": "remove", "path": "/provenance" }
+        ]
+      },
+      "expect": {
+        "outcome": "reject",
+        "error": "SCHEMA_INVALID"
+      },
+      "notes": "provenance is required by capability-record.schema.json; the invariant is that indexing MUST fail."
+    }
+  ]
+}

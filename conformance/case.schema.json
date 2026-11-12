@@ -32,6 +32,7 @@
       "type": "string",
       "enum": [
         "handshake",
+        "register",
         "send",
         "frame",
         "clock",
@@ -41,9 +42,11 @@
         "handoff",
         "cancel",
         "discover",
+        "index",
         "resolve",
         "restart",
-        "replay"
+        "replay",
+        "export"
       ]
     },
     "input": { "$ref": "#/$defs/input" },

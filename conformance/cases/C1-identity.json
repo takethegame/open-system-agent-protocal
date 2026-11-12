@@ -1,0 +1,110 @@
+{
+  "level": "C1",
+  "cases": [
+    {
+      "id": "C1-01",
+      "level": "C1",
+      "title": "unregistered agent is rejected",
+      "mode": "automated",
+      "operation": "register",
+      "input": {
+        "ref": "../../examples/hello.json",
+        "params": { "registered": false }
+      },
+      "expect": {
+        "outcome": "reject",
+        "error": "AUTH_DENIED"
+      }
+    },
+    {
+      "id": "C1-02",
+      "level": "C1",
+      "title": "third party cannot register a reserved system namespace",
+      "mode": "automated",
+      "operation": "register",
+      "input": {
+        "ref": "../../examples/hello.json",
+        "mutations": [
+          { "op": "replace", "path": "/from", "value": "agent://system/registry#0" },
+          { "op": "replace", "path": "/body/data/agent", "value": "agent://system/registry#0" }
+        ]
+      },
+      "expect": {
+        "outcome": "reject",
+        "error": "AUTH_DENIED"
+      },
+      "notes": "agent://system/* is reserved (standard.md §4.4)."
+    },
+    {
+      "id": "C1-03",
+      "level": "C1",
+      "title": "app signature mismatch is rejected",
+      "mode": "automated",
+      "operation": "register",
+      "input": {
+        "ref": "../../examples/manifest.json",
+        "mutations": [
+          { "op": "replace", "path": "/signature", "value": "base64url-invalid-signature" }
+        ]
+      },
+      "expect": {
+        "outcome": "reject",
+        "error": "AUTH_DENIED"
+      }
+    },
+    {
+      "id": "C1-04",
+      "level": "C1",
+      "title": "agent cannot claim to belong to another app",
+      "mode": "automated",
+      "operation": "register",
+      "input": {
+        "ref": "../../examples/hello.json",
+        "mutations": [
+          { "op": "replace", "path": "/body/data/app", "value": "app://com.example.calendar" }
+        ]
+      },
+      "expect": {
+        "outcome": "reject",
+        "error": "AUTH_DENIED"
+      },
+      "notes": "The claimed app does not match the manifest that owns agent://com.example.notes/assistant#7f3a."
+    },
+    {
+      "id": "C1-05",
+      "level": "C1",
+      "title": "old signature after key rotation is rejected or grace-limited",
+      "mode": "automated",
+      "operation": "register",
+      "input": {
+        "ref": "../../examples/hello.json",
+        "params": {
+          "key_rotated": true,
+          "within_grace_period": false
+        }
+      },
+      "expect": {
+        "outcome": "observe",
+        "notes": "The spec requires a policy decision: reject, or accept only during a bounded transition window. The report records which one happens."
+      }
+    },
+    {
+      "id": "C1-06",
+      "level": "C1",
+      "title": "public key not bound to the app identity is rejected",
+      "mode": "automated",
+      "operation": "register",
+      "input": {
+        "ref": "../../examples/hello.json",
+        "mutations": [
+          { "op": "replace", "path": "/body/data/public_key", "value": "base64url-unbound-public-key" }
+        ],
+        "params": { "bound_in_manifest": false }
+      },
+      "expect": {
+        "outcome": "reject",
+        "error": "AUTH_DENIED"
+      }
+    }
+  ]
+}

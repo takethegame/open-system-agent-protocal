@@ -1,0 +1,20 @@
+{
+  "osap": "0.1",
+  "id": "msg_01J9Z6Q3V8N2K4M7P1R5T0WX40",
+  "type": "hello",
+  "from": "agent://com.example.notes/assistant#7f3a",
+  "to": { "agent": "agent://system/bus#0" },
+  "body": {
+    "schema": "osap.hello/v1",
+    "data": {
+      "app": "app://com.example.notes",
+      "agent": "agent://com.example.notes/assistant#7f3a",
+      "display_name": "Notes Assistant",
+      "manifest_version": "1.0.0",
+      "features": ["discover", "delegate", "context", "consent", "stream"],
+      "encodings": ["json"],
+      "public_key": "base64url-example-public-key"
+    }
+  },
+  "ts": "2026-11-10T10:14:45Z"
+}
