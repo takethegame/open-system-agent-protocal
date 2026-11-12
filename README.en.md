@@ -1,5 +1,7 @@
 # OSAP — Open System Agent Protocol
 
+[![ci](https://github.com/takethegame/open-system-agent-protocol/actions/workflows/ci.yml/badge.svg)](https://github.com/takethegame/open-system-agent-protocol/actions/workflows/ci.yml)
+
 > English translation of [README.md](README.md). The Chinese original prevails in case of conflict.
 
 > **A local-first open standard: cross-application agent peer-to-peer collaboration, capability registry federation, and task-level authorization.**
@@ -66,18 +68,25 @@ For a more detailed positioning and prior work, see [`docs/prior-art.md`](docs/p
 | [`docs/design-draft.en.md`](docs/design-draft.en.md) | Early design notes (non-normative; background and trade-offs retained) |
 | [`GOVERNANCE.en.md`](GOVERNANCE.en.md) | Versions, changes, roles, security disclosure, external standards liaison |
 | [`CONTRIBUTING.en.md`](CONTRIBUTING.en.md) | Contribution process, DCO, content rules |
+| [`docs/roadmap.md`](docs/roadmap.md) | Milestones from 0.1 to 0.2, exit criteria, risk register, decision gates (working document, Chinese) |
+| [`SECURITY.en.md`](SECURITY.en.md) | Vulnerability disclosure channel, timelines, security review triggers |
+| [`CHANGELOG.md`](CHANGELOG.md) | Release history |
 
 ---
 
 ## Repository Structure
 
 ```
-docs/                 Specification, conformance, prior work, design notes
+docs/                 Specification, conformance, prior work, design notes, roadmap
 schemas/              JSON Schema (envelope, capability, task, manifest, capability record, receipt, audit, payload)
 examples/             Example messages and objects
-tools/                Validation scripts
+tools/                Validation scripts (examples, schemas, docs)
+.github/workflows/    CI
 GOVERNANCE.md         Governance draft
 CONTRIBUTING.md       Contribution process and DCO
+SECURITY.md           Security disclosure
+CHANGELOG.md          Release history
+requirements.txt      Python dependencies
 LICENSE               Apache-2.0
 NOTICE                Copyright and trademark notices
 README.en.md          This file
@@ -89,14 +98,14 @@ English parallel versions use the same name with an `.en.md` suffix and sit alon
 
 ## Quick Validation
 
-The examples and schemas have passed validation:
-
 ```bash
-python3 tools/validate_examples.py
-# OK: 20 checks passed
+python3 -m pip install -r requirements.txt
+python3 tools/check_schemas.py     # schema meta-validation and $id uniqueness
+python3 tools/validate_examples.py # examples and cross-document checks
+python3 tools/check_docs.py        # JSON blocks, links, zh/en parity
 ```
 
-Dependency: `jsonschema` 4.18+ (Python 3.9+; `referencing` is its dependency).
+All three run in CI; dependencies are in `requirements.txt` (Python 3.9+).
 
 ---
 

@@ -1,5 +1,7 @@
 # OSAP — Open System Agent Protocol
 
+[![ci](https://github.com/takethegame/open-system-agent-protocol/actions/workflows/ci.yml/badge.svg)](https://github.com/takethegame/open-system-agent-protocol/actions/workflows/ci.yml)
+
 > English version: [README.en.md](README.en.md)
 
 > **本地优先的开放标准：跨应用 Agent 点对点协作、能力注册表联邦、任务级授权。**
@@ -66,18 +68,25 @@ OSAP 的目标不是“再发明一个 Agent 协议”，而是定义 **本地�
 | [`docs/design-draft.md`](docs/design-draft.md) | 早期设计说明（非规范性，保留背景与取舍） |
 | [`GOVERNANCE.md`](GOVERNANCE.md) | 版本、变更、角色、安全披露、外部标准联络 |
 | [`CONTRIBUTING.md`](CONTRIBUTING.md) | 贡献流程、DCO、内容规范 |
+| [`docs/roadmap.md`](docs/roadmap.md) | 0.1 → 0.2 里程碑、退出标准、风险登记与决策闸门（工作文档） |
+| [`SECURITY.md`](SECURITY.md) | 漏洞披露渠道、时限、安全评审触发条件 |
+| [`CHANGELOG.md`](CHANGELOG.md) | 版本变更记录 |
 
 ---
 
 ## 仓库结构
 
 ```
-docs/                 规范、一致性、先行工作、设计说明
+docs/                 规范、一致性、先行工作、设计说明、路线图
 schemas/              JSON Schema（信封、能力、任务、清单、能力记录、回执、审计、payload）
 examples/             示例消息与对象
-tools/                校验脚本
+tools/                校验脚本（示例、schema、文档）
+.github/workflows/    CI
 GOVERNANCE.md         治理草案
 CONTRIBUTING.md       贡献流程与 DCO
+SECURITY.md           安全披露
+CHANGELOG.md          版本变更记录
+requirements.txt      Python 依赖
 LICENSE               Apache-2.0
 NOTICE                版权与商标说明
 README.md             本文件
@@ -89,14 +98,14 @@ README.md             本文件
 
 ## 快速校验
 
-示例与 schema 已通过校验：
-
 ```bash
-python3 tools/validate_examples.py
-# OK: 20 checks passed
+python3 -m pip install -r requirements.txt
+python3 tools/check_schemas.py     # schema 元校验与 $id 唯一性
+python3 tools/validate_examples.py # 示例与跨文档校验
+python3 tools/check_docs.py        # JSON 块、断链、中英结构一致性
 ```
 
-依赖：`jsonschema` 4.18+（Python 3.9+；`referencing` 为其依赖）。
+三者都在 CI 中运行；依赖见 `requirements.txt`（Python 3.9+）。
 
 ---
 
