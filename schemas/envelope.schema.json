@@ -122,6 +122,13 @@
     {
       "if": { "properties": { "type": { "const": "hello" } } },
       "then": { "required": ["body"] }
+    },
+    {
+      "if": {
+        "properties": { "task": { "properties": { "mode": { "const": "peer" } } } },
+        "required": ["task"]
+      },
+      "then": { "required": ["session_id"] }
     }
   ]
 }

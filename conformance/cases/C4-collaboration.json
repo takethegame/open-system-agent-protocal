@@ -1,0 +1,223 @@
+{
+  "level": "C4",
+  "cases": [
+    {
+      "id": "C4-01",
+      "level": "C4",
+      "title": "cancelling a parent task propagates to child tasks",
+      "mode": "manual",
+      "operation": "cancel",
+      "preconditions": [
+        "a parent task has at least one running child task",
+        "both tasks are owned by agents reachable through the same Bus"
+      ],
+      "steps": [
+        "send cancel for the parent task",
+        "observe the parent task state and every child task state",
+        "collect the audit events for the task tree"
+      ],
+      "expect": {
+        "outcome": "observe",
+        "notes": "Every running child MUST receive cancel and reach cancelled; the audit trail MUST record the propagation."
+      }
+    },
+    {
+      "id": "C4-02",
+      "level": "C4",
+      "title": "delegation whose budget exceeds the parent remainder is rejected",
+      "mode": "automated",
+      "operation": "delegate",
+      "input": {
+        "ref": "../../examples/delegate.json",
+        "context": ["../../examples/task.json"],
+        "mutations": [
+          { "op": "replace", "path": "/body/data/budget/wall_ms", "value": 9000 }
+        ]
+      },
+      "expect": {
+        "outcome": "reject",
+        "error": "POLICY_DENIED"
+      },
+      "notes": "examples/task.json leaves 8000 ms; the child asks for 9000 ms. The spec requires the child budget to stay within the parent remainder but defines no delegation-specific error code."
+    },
+    {
+      "id": "C4-03",
+      "level": "C4",
+      "title": "child result whose schema differs from result_schema is rejected",
+      "mode": "automated",
+      "operation": "send",
+      "input": {
+        "ref": "../../examples/result.json",
+        "context": ["../../examples/task.json"],
+        "mutations": [
+          { "op": "replace", "path": "/body/schema", "value": "osap.calendar.propose/v1" }
+        ]
+      },
+      "expect": {
+        "outcome": "reject",
+        "error": "SCHEMA_INVALID"
+      },
+      "notes": "The parent task declares result_schema osap.calendar.proposal/v1; the result claims osap.calendar.propose/v1."
+    },
+    {
+      "id": "C4-04",
+      "level": "C4",
+      "title": "peer mode without session_id is rejected",
+      "mode": "automated",
+      "operation": "send",
+      "input": {
+        "ref": "../../examples/request.json",
+        "mutations": [
+          { "op": "replace", "path": "/task/mode", "value": "peer" },
+          { "op": "remove", "path": "/session_id" }
+        ]
+      },
+      "expect": {
+        "outcome": "reject",
+        "error": "SCHEMA_INVALID"
+      },
+      "notes": "envelope.schema.json requires session_id when task.mode is peer (standard.md §8.4)."
+    },
+    {
+      "id": "C4-05",
+      "level": "C4",
+      "title": "peer cannot exercise the other participant's capability",
+      "mode": "automated",
+      "operation": "use",
+      "input": {
+        "ref": "../../examples/capability.json",
+        "context": ["../../examples/request.json"],
+        "mutations": [
+          { "op": "replace", "path": "/subject", "value": "agent://com.example.calendar/agent#9c" }
+        ],
+        "params": { "peer_mode": true }
+      },
+      "expect": {
+        "outcome": "reject",
+        "error": "CAPABILITY_SUBJECT_MISMATCH"
+      },
+      "notes": "The envelope sender is the orchestrator, but the capability is bound to the calendar peer; a session identity MUST NOT lend the other party's authority."
+    },
+    {
+      "id": "C4-06",
+      "level": "C4",
+      "title": "handoff of an L3 action without renewed consent is rejected",
+      "mode": "automated",
+      "operation": "handoff",
+      "input": {
+        "ref": "../../examples/handoff.json",
+        "params": {
+          "risk": "L3",
+          "renewed_consent": false
+        }
+      },
+      "expect": {
+        "outcome": "reject",
+        "error": "POLICY_CONSENT_REQUIRED"
+      },
+      "notes": "L3/L4 handoff MUST obtain a fresh receipt whose audience is the new owner; examples/handoff.json carries no consent receipt."
+    },
+    {
+      "id": "C4-07",
+      "level": "C4",
+      "title": "exceeding the delegated budget returns TASK_BUDGET_EXCEEDED",
+      "mode": "automated",
+      "operation": "use",
+      "input": {
+        "ref": "../../examples/capability.json",
+        "context": ["../../examples/request.json"],
+        "params": {
+          "consumed": { "wall_ms": 6000, "tool_calls": 1 }
+        }
+      },
+      "expect": {
+        "outcome": "reject",
+        "error": "TASK_BUDGET_EXCEEDED"
+      },
+      "notes": "constraints.max_budget in examples/capability.json allows 5000 ms; the adapter reports 6000 ms already consumed."
+    },
+    {
+      "id": "C4-08",
+      "level": "C4",
+      "title": "unfinished tasks do not silently stay running after a Bus restart",
+      "mode": "manual",
+      "operation": "restart",
+      "preconditions": [
+        "a task is in running state with no terminal result"
+      ],
+      "steps": [
+        "stop the Bus without completing the task",
+        "restart the Bus",
+        "query the task state",
+        "inspect the audit trail"
+      ],
+      "expect": {
+        "outcome": "observe",
+        "notes": "The task MUST become failed or be rescheduled by policy; silent running is non-conforming and the recovery MUST be audited."
+      }
+    },
+    {
+      "id": "C4-09",
+      "level": "C4",
+      "title": "crash after effect intent is marked unknown and not replayed",
+      "mode": "manual",
+      "operation": "replay",
+      "preconditions": [
+        "an L2/L3 task has recorded effect.intent",
+        "the implementation is stopped before effect.executed is recorded"
+      ],
+      "steps": [
+        "crash the implementation after effect.intent",
+        "restart and trigger reconciliation",
+        "inspect the task state and the audit trail",
+        "verify whether the side effect was repeated"
+      ],
+      "expect": {
+        "outcome": "observe",
+        "notes": "The effect and task MUST be marked unknown; automatic replay is forbidden until reconciliation (§8.11)."
+      }
+    },
+    {
+      "id": "C4-10",
+      "level": "C4",
+      "title": "original owner cannot keep sending requests for a handed-off task",
+      "mode": "automated",
+      "operation": "send",
+      "input": {
+        "ref": "../../examples/request.json",
+        "context": ["../../examples/task.json", "../../examples/handoff.json"],
+        "params": {
+          "owner": "agent://com.example.calendar/agent#9c",
+          "handoff_accepted": true
+        }
+      },
+      "expect": {
+        "outcome": "reject",
+        "error": "POLICY_DENIED"
+      },
+      "notes": "After an accepted handoff the original owner MUST relinquish control; the request from agent://com.example.orchestrator/main#1a2b is rejected."
+    },
+    {
+      "id": "C4-11",
+      "level": "C4",
+      "title": "rejected handoff leaves task ownership and budget unchanged",
+      "mode": "automated",
+      "operation": "handoff",
+      "input": {
+        "ref": "../../examples/handoff.json",
+        "context": ["../../examples/task.json"],
+        "params": { "handoff_accepted": false }
+      },
+      "expect": {
+        "outcome": "accept",
+        "state": {
+          "handoff_result": "rejected",
+          "owner": "agent://com.example.orchestrator/main#1a2b",
+          "budget_unchanged": true,
+          "task_status_unchanged": true
+        }
+      },
+      "notes": "A rejection is a valid one-shot result, not a protocol error; the task MUST stay with the original owner with identical state and budget (§8.9)."
+    }
+  ]
+}
