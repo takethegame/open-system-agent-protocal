@@ -117,9 +117,9 @@ conformance/
   report.schema.json        运行报告（对应 standard §12.4）
   cases/
     C0-transport.json       已完成（7）
+    C1-identity.json        已完成（6）
+    C2-registry.json        已完成（6）
     C3-authorization.json   已完成（12）
-    C1-identity.json        待迁移
-    C2-registry.json        待迁移
     C4-collaboration.json   待迁移
     C5-context.json         待迁移
     C6-federation.json      待迁移
@@ -151,7 +151,7 @@ tools/
 **任务**
 
 - [x] 定义用例 JSON Schema（`case` / `suite` / `report`）并纳入 CI
-- [ ] 把 68 个用例逐条迁移，保持 ID 与 `docs/conformance.md` 一致（已完成 19：C0 7 + C3 12）
+- [ ] 把 68 个用例逐条迁移，保持 ID 与 `docs/conformance.md` 一致（已完成 31：C0 7 + C1 6 + C2 6 + C3 12）
 - [x] mutation 引擎（内置在 runner：`replace` / `add` / `remove` / `extend` / `truncate`）
 - [x] 实现 `conformance_run.py`：
   - [x] `--impl` 适配器接口（Python 文件，暴露 `conformance_check`）
@@ -160,12 +160,12 @@ tools/
   - [x] 未实现的能力标记 `skip` 而非 `fail`
 - [x] 用 `--stub` 代替独立的 stub 实现（无适配器时全部 `skip`）
 - [x] 在 `docs/conformance.md` 增加“结构 / 格式 / 运行”三节（3.1–3.3，编号不变）
-- [ ] 迁移 C1、C2、C4–C7 剩余 49 个用例
+- [ ] 迁移 C4–C7 剩余 37 个用例
 
-**当前状态**：19/68（C0 7 + C3 12）。`--stub` 输出
+**当前状态**：31/68（C0 7 + C1 6 + C2 6 + C3 12）。`--stub` 输出
 
 ```
-19 cases [C0, C3]: 0 pass, 0 fail, 19 skip
+31 cases [C0, C1, C2, C3]: 0 pass, 0 fail, 31 skip
 ```
 
 用临时回显适配器验证过完整链路（19 条中 17 pass、2 条 manual skip），报告通过 `report.schema.json`。逐条拆分与夹具缺口见 [`progress.md`](progress.md) §4.6–§4.7。
