@@ -1,0 +1,52 @@
+{
+  "chain_id": "audit_chain_01J9Z6Q3V8N2K4M7P1R5T0WX31",
+  "trace_id": "trace_01J9Z6Q3V8N2K4M7P1R5T0WX00",
+  "created_at": "2026-11-10T10:14:45Z",
+  "events": [
+    {
+      "audit_id": "audit_01J9Z6Q3V8N2K4M7P1R5T0WX30",
+      "trace_id": "trace_01J9Z6Q3V8N2K4M7P1R5T0WX00",
+      "task_id": "task_01J9Z6Q3V8N2K4M7P1R5T0WXAB",
+      "session_id": "session_01J9Z6Q3V8N2K4M7P1R5T0WX09",
+      "actor": "agent://com.example.orchestrator/main#1a2b",
+      "action": "task.created",
+      "target": "task_01J9Z6Q3V8N2K4M7P1R5T0WXAB",
+      "decision": "allow",
+      "ts": "2026-11-10T10:14:45Z",
+      "prev_hash": "sha256:0000000000000000",
+      "hash": "sha256:1f0c9a7e2b"
+    },
+    {
+      "audit_id": "audit_01J9Z6Q3V8N2K4M7P1R5T0WX32",
+      "trace_id": "trace_01J9Z6Q3V8N2K4M7P1R5T0WX00",
+      "task_id": "task_01J9Z6Q3V8N2K4M7P1R5T0WXAB",
+      "session_id": "session_01J9Z6Q3V8N2K4M7P1R5T0WX09",
+      "actor": "agent://com.example.orchestrator/main#1a2b",
+      "action": "capability.exercised",
+      "target": "calendar:primary",
+      "decision": "allow",
+      "policy": "calendar_first_use",
+      "consent_receipt_id": "consent_01J9Z6Q3V8N2K4M7P1R5T0WXAC",
+      "ts": "2026-11-10T10:14:46Z",
+      "prev_hash": "sha256:1f0c9a7e2b",
+      "hash": "sha256:2a7d4c8f01"
+    },
+    {
+      "audit_id": "audit_01J9Z6Q3V8N2K4M7P1R5T0WX2F",
+      "trace_id": "trace_01J9Z6Q3V8N2K4M7P1R5T0WX00",
+      "task_id": "task_01J9Z6Q3V8N2K4M7P1R5T0WXAB",
+      "session_id": "session_01J9Z6Q3V8N2K4M7P1R5T0WX09",
+      "actor": "agent://com.example.orchestrator/main#1a2b",
+      "action": "effect.intent",
+      "phase": "intent",
+      "target": "calendar:primary",
+      "decision": "allow",
+      "policy": "calendar_first_use",
+      "consent_receipt_id": "consent_01J9Z6Q3V8N2K4M7P1R5T0WXAC",
+      "context_refs": ["obj://sha256:9f2c7b1a"],
+      "ts": "2026-11-10T10:14:46Z",
+      "prev_hash": "sha256:2a7d4c8f01",
+      "hash": "sha256:3b8e5d9a12"
+    }
+  ]
+}

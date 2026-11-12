@@ -339,6 +339,17 @@ def main() -> int:
             "cases": results,
             "summary": summary,
         }
+        report_schema = load(SCHEMA_DIRS[1] / "report.schema.json")
+        validator = Draft202012Validator(
+            report_schema, registry=registry, format_checker=FormatChecker()
+        )
+        errors = sorted(validator.iter_errors(report), key=lambda e: list(e.path))
+        if errors:
+            details = "; ".join(
+                f"{'/'.join(map(str, e.path)) or '<root>'}: {e.message}"
+                for e in errors
+            )
+            raise SystemExit(f"report does not match report.schema.json: {details}")
         output = json.dumps(report, indent=2, ensure_ascii=False)
     elif args.format == "md":
         output = render_markdown(results, summary, levels)

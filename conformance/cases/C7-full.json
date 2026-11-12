@@ -1,0 +1,144 @@
+{
+  "level": "C7",
+  "cases": [
+    {
+      "id": "C7-01",
+      "level": "C7",
+      "title": "three-app task keeps a complete trace and replayable audit",
+      "mode": "manual",
+      "operation": "export",
+      "preconditions": [
+        "three Apps participate: orchestrator, calendar, and notes",
+        "the task crosses at least two delegation or handoff boundaries"
+      ],
+      "steps": [
+        "run the end-to-end task across the three Apps",
+        "inspect trace_id and causation_id on every message",
+        "export the audit chain by trace_id",
+        "verify chain integrity and replay the trace without executing side effects"
+      ],
+      "expect": {
+        "outcome": "observe",
+        "notes": "Every hop MUST share one trace_id, each hop MUST carry causation_id, and the export MUST be both verifiable and free of plaintext secrets (§10.6)."
+      }
+    },
+    {
+      "id": "C7-02",
+      "level": "C7",
+      "title": "tampered audit chain fails verification",
+      "mode": "automated",
+      "operation": "export",
+      "input": {
+        "ref": "../../examples/audit-chain.json",
+        "mutations": [
+          { "op": "replace", "path": "/events/1/prev_hash", "value": "sha256:tampered0000" }
+        ],
+        "params": { "verify_chain": true }
+      },
+      "expect": {
+        "outcome": "reject",
+        "error": "AUDIT_CHAIN_INVALID"
+      },
+      "notes": "The second event no longer links to the first hash. AUDIT_CHAIN_INVALID is an extension domain code: the spec requires verification to fail but defines no audit error code."
+    },
+    {
+      "id": "C7-03",
+      "level": "C7",
+      "title": "user audit export is redacted while remaining verifiable",
+      "mode": "automated",
+      "operation": "export",
+      "input": {
+        "ref": "../../examples/audit-chain.json",
+        "params": { "redact": true }
+      },
+      "expect": {
+        "outcome": "accept",
+        "state": {
+          "redacted": true,
+          "chain_verified": true,
+          "plaintext_recoverable": false
+        }
+      },
+      "notes": "Redaction MAY replace sensitive fields with a per-export salted commitment; integrity MUST remain verifiable (§10.6)."
+    },
+    {
+      "id": "C7-04",
+      "level": "C7",
+      "title": "cross-user request is denied by default",
+      "mode": "automated",
+      "operation": "send",
+      "input": {
+        "ref": "../../examples/request.json",
+        "params": {
+          "sender_user": "user://local/example-user",
+          "receiver_user": "user://local/other-user",
+          "cross_user_enabled": false
+        }
+      },
+      "expect": {
+        "outcome": "reject",
+        "error": "POLICY_DENIED"
+      },
+      "notes": "Each user session has its own Bus; cross-user traffic MUST be explicitly enabled and consented to by both sides (§11.2)."
+    },
+    {
+      "id": "C7-05",
+      "level": "C7",
+      "title": "replay does not repeat side effects",
+      "mode": "automated",
+      "operation": "replay",
+      "input": {
+        "ref": "../../examples/request.json",
+        "params": {
+          "repeat": 2,
+          "replay": true,
+          "idempotency_key": "msg_01J9Z6Q3V8N2K4M7P1R5T0WX10"
+        }
+      },
+      "expect": {
+        "outcome": "accept",
+        "state": {
+          "side_effects": 1,
+          "idempotent_replay": true
+        }
+      },
+      "notes": "Replay MUST be permission-bound and MUST NOT re-execute side effects (§10.6)."
+    },
+    {
+      "id": "C7-06",
+      "level": "C7",
+      "title": "L3 effect with only an intent is marked unknown and alerted",
+      "mode": "automated",
+      "operation": "restart",
+      "input": {
+        "ref": "../../examples/audit-chain.json",
+        "params": { "only_intent": true }
+      },
+      "expect": {
+        "outcome": "accept",
+        "state": {
+          "effect_state": "unknown",
+          "alerted": true
+        }
+      },
+      "notes": "examples/audit-chain.json ends at effect.intent with no effect.executed; recovery MUST mark the effect unknown and require reconciliation (§8.11, §10.5)."
+    },
+    {
+      "id": "C7-07",
+      "level": "C7",
+      "title": "0.1 does not claim protection against a compromised Bus",
+      "mode": "automated",
+      "operation": "declare",
+      "input": {
+        "params": {
+          "bus_compromised": true,
+          "claims_p0_protection": true
+        }
+      },
+      "expect": {
+        "outcome": "observe",
+        "notes": "0.1 trusts the Bus (P0); claiming protection against a compromised Bus is non-conforming. P1 evaluates hardened transports separately (§3.6, §11.1)."
+      }
+    }
+  ]
+}

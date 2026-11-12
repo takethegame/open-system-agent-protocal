@@ -18,3 +18,4 @@ venv/
 # Local tool output
 conformance/report.json
 conformance/report.md
+conformance-report.json

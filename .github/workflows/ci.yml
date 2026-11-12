@@ -44,3 +44,6 @@ jobs:
 
       - name: Check conformance suite
         run: python tools/conformance_run.py --stub
+
+      - name: Validate conformance report
+        run: python tools/conformance_run.py --stub --format json --out conformance-report.json
