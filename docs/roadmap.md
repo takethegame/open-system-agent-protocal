@@ -25,7 +25,7 @@
 | 规范正文 | `docs/standard.md`，131 节，0.1 Draft |
 | JSON Schema | 12 个（envelope、capability、task、manifest、capability-record、consent-receipt、consent-request、audit-event、discover、discover-result、delegate、handoff） |
 | 示例 | 14 个，全部通过 schema 校验 |
-| 一致性用例 | 68 个（C0:7、C1:6、C2:6、C3:12、C4:11、C5:11、C6:8、C7:7），其中 42 个已机器可读 |
+| 一致性用例 | 68 个（C0:7、C1:6、C2:6、C3:12、C4:11、C5:11、C6:8、C7:7），其中 50 个已机器可读 |
 | 校验工具 | `tools/validate_examples.py`，输出 `OK: 20 checks passed` |
 | 文档 | 7 组中英文平行版本 |
 | 许可 | Apache-2.0 + DCO 1.1 |
@@ -122,7 +122,7 @@ conformance/
     C3-authorization.json   已完成（12）
     C4-collaboration.json   已完成（11）
     C5-context.json         待迁移
-    C6-federation.json      待迁移
+    C6-federation.json      已完成（8）
     C7-full.json            待迁移
 tools/
   conformance_run.py        加载 → 校验 → 应用 mutation → 调用适配器 → 生成报告
@@ -151,7 +151,7 @@ tools/
 **任务**
 
 - [x] 定义用例 JSON Schema（`case` / `suite` / `report`）并纳入 CI
-- [ ] 把 68 个用例逐条迁移，保持 ID 与 `docs/conformance.md` 一致（已完成 42：C0 7 + C1 6 + C2 6 + C3 12 + C4 11）
+- [ ] 把 68 个用例逐条迁移，保持 ID 与 `docs/conformance.md` 一致（已完成 50：C0 7 + C1 6 + C2 6 + C3 12 + C4 11 + C6 8）
 - [x] mutation 引擎（内置在 runner：`replace` / `add` / `remove` / `extend` / `truncate`）
 - [x] 实现 `conformance_run.py`：
   - [x] `--impl` 适配器接口（Python 文件，暴露 `conformance_check`）
@@ -160,12 +160,12 @@ tools/
   - [x] 未实现的能力标记 `skip` 而非 `fail`
 - [x] 用 `--stub` 代替独立的 stub 实现（无适配器时全部 `skip`）
 - [x] 在 `docs/conformance.md` 增加“结构 / 格式 / 运行”三节（3.1–3.3，编号不变）
-- [ ] 迁移 C5–C7 剩余 26 个用例
+- [ ] 迁移 C5 与 C7 剩余 18 个用例
 
-**当前状态**：42/68（C0 7 + C1 6 + C2 6 + C3 12 + C4 11）。`--stub` 输出
+**当前状态**：50/68（C0 7 + C1 6 + C2 6 + C3 12 + C4 11 + C6 8）。`--stub` 输出
 
 ```
-42 cases [C0, C1, C2, C3, C4]: 0 pass, 0 fail, 42 skip
+50 cases [C0, C1, C2, C3, C4, C6]: 0 pass, 0 fail, 50 skip
 ```
 
 用临时回显适配器验证过 C0–C3 的完整链路（19 条中 17 pass、2 条 manual skip），报告通过 `report.schema.json`。逐条拆分与夹具缺口见 [`progress.md`](progress.md) §4.6–§4.7。
@@ -349,7 +349,7 @@ tools/
 1. 建 `.gitignore`、`requirements.txt`、`SECURITY.md`、`CHANGELOG.md`
 2. 建 `.github/workflows/ci.yml`，把现有校验脚本接进去
 3. 定义 `conformance/case.schema.json`
-4. 迁移 C0–C4 五个用例文件（共 42 条）作为样板
+4. 迁移 C0–C4 与 C6 六个用例文件（共 50 条）作为样板
 5. 写 `conformance_run.py` 的 `--stub` 模式
 6. 仓库改名为 `protocol`，更新 README 徽章
 7. 在 `docs/conformance.md` 加一节指向 `conformance/cases/`
