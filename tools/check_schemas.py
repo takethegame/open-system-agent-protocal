@@ -19,7 +19,7 @@ from pathlib import Path
 from jsonschema import Draft202012Validator
 
 ROOT = Path(__file__).resolve().parents[1]
-SCHEMAS = ROOT / "schemas"
+SCHEMA_DIRS = [ROOT / "schemas", ROOT / "conformance"]
 EXPECTED_ID_PREFIX = "urn:osap:schema:"
 
 
@@ -33,23 +33,26 @@ def main() -> int:
     checks = 0
     seen_ids: dict[str, str] = {}
 
-    paths = sorted(SCHEMAS.glob("*.schema.json"))
+    paths = sorted(
+        path for directory in SCHEMA_DIRS for path in directory.glob("*.schema.json")
+    )
     if not paths:
         print("FAIL: no schemas found")
         return 1
 
     for path in paths:
+        label = path.relative_to(ROOT)
         try:
             schema = load(path)
         except json.JSONDecodeError as exc:
-            failures.append(f"{path.name}: invalid JSON: {exc}")
+            failures.append(f"{label}: invalid JSON: {exc}")
             continue
 
         checks += 1
         try:
             Draft202012Validator.check_schema(schema)
         except Exception as exc:  # jsonschema raises SchemaError
-            failures.append(f"{path.name}: metaschema violation: {exc}")
+            failures.append(f"{label}: metaschema violation: {exc}")
             continue
 
         checks += 1
@@ -58,16 +61,17 @@ def main() -> int:
             EXPECTED_ID_PREFIX
         ):
             failures.append(
-                f"{path.name}: $id must start with {EXPECTED_ID_PREFIX!r}, got {schema_id!r}"
+                f"{label}: $id must start with {EXPECTED_ID_PREFIX!r}, got {schema_id!r}"
             )
         elif schema_id in seen_ids:
             failures.append(
-                f"{path.name}: duplicate $id {schema_id!r} (also in {seen_ids[schema_id]})"
+                f"{label}: duplicate $id {schema_id!r} (also in {seen_ids[schema_id]})"
             )
         else:
-            seen_ids[schema_id] = path.name
+            seen_ids[schema_id] = str(label)
 
     for path in paths:
+        label = path.relative_to(ROOT)
         try:
             schema = load(path)
         except json.JSONDecodeError:
@@ -76,7 +80,7 @@ def main() -> int:
         for ref in _iter_refs(schema):
             if ref.startswith("#") or ref.startswith("urn:osap:schema:"):
                 continue
-            failures.append(f"{path.name}: unsupported $ref target {ref!r}")
+            failures.append(f"{label}: unsupported $ref target {ref!r}")
 
     if failures:
         print("FAIL")

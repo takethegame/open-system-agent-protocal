@@ -1,0 +1,220 @@
+{
+  "level": "C3",
+  "cases": [
+    {
+      "id": "C3-01",
+      "level": "C3",
+      "title": "audience mismatch is rejected",
+      "mode": "automated",
+      "operation": "use",
+      "input": {
+        "ref": "../../examples/capability.json",
+        "context": ["../../examples/request.json"],
+        "mutations": [
+          { "op": "replace", "path": "/audience", "value": "agent://com.example.notes/agent#77" }
+        ]
+      },
+      "expect": {
+        "outcome": "reject",
+        "error": "CAPABILITY_AUDIENCE_MISMATCH"
+      }
+    },
+    {
+      "id": "C3-02",
+      "level": "C3",
+      "title": "task binding mismatch is rejected",
+      "mode": "automated",
+      "operation": "use",
+      "input": {
+        "ref": "../../examples/capability.json",
+        "context": ["../../examples/request.json"],
+        "mutations": [
+          { "op": "replace", "path": "/task_id", "value": "task_01J9Z6Q3V8N2K4M7P1R5T0WXZZ" }
+        ]
+      },
+      "expect": {
+        "outcome": "reject",
+        "error": "CAPABILITY_TASK_MISMATCH"
+      }
+    },
+    {
+      "id": "C3-03",
+      "level": "C3",
+      "title": "subject different from envelope sender is rejected",
+      "mode": "automated",
+      "operation": "use",
+      "input": {
+        "ref": "../../examples/capability.json",
+        "context": ["../../examples/request.json"],
+        "mutations": [
+          { "op": "replace", "path": "/subject", "value": "agent://com.example.notes/agent#77" }
+        ]
+      },
+      "expect": {
+        "outcome": "reject",
+        "error": "CAPABILITY_SUBJECT_MISMATCH"
+      }
+    },
+    {
+      "id": "C3-04",
+      "level": "C3",
+      "title": "widening actions during attenuation is rejected",
+      "mode": "automated",
+      "operation": "attenuate",
+      "input": {
+        "ref": "../../examples/capability.json",
+        "mutations": [
+          { "op": "replace", "path": "/actions", "value": ["propose", "create"] }
+        ]
+      },
+      "expect": {
+        "outcome": "reject",
+        "error": "CAPABILITY_ATTENUATION_INVALID"
+      }
+    },
+    {
+      "id": "C3-05",
+      "level": "C3",
+      "title": "widening resources during attenuation is rejected",
+      "mode": "automated",
+      "operation": "attenuate",
+      "input": {
+        "ref": "../../examples/capability.json",
+        "mutations": [
+          { "op": "replace", "path": "/resources", "value": ["calendar:primary", "calendar:work"] }
+        ]
+      },
+      "expect": {
+        "outcome": "reject",
+        "error": "CAPABILITY_ATTENUATION_INVALID"
+      }
+    },
+    {
+      "id": "C3-06",
+      "level": "C3",
+      "title": "extending exp during attenuation is rejected",
+      "mode": "automated",
+      "operation": "attenuate",
+      "input": {
+        "ref": "../../examples/capability.json",
+        "mutations": [
+          { "op": "replace", "path": "/exp", "value": 1794312885 }
+        ]
+      },
+      "expect": {
+        "outcome": "reject",
+        "error": "CAPABILITY_ATTENUATION_INVALID"
+      }
+    },
+    {
+      "id": "C3-07",
+      "level": "C3",
+      "title": "depth beyond max_depth is rejected",
+      "mode": "automated",
+      "operation": "attenuate",
+      "input": {
+        "ref": "../../examples/capability.json",
+        "mutations": [
+          { "op": "replace", "path": "/depth", "value": 3 }
+        ]
+      },
+      "expect": {
+        "outcome": "reject",
+        "error": "CAPABILITY_ATTENUATION_INVALID"
+      },
+      "notes": "max_depth in examples/capability.json is 2."
+    },
+    {
+      "id": "C3-08",
+      "level": "C3",
+      "title": "child capability is unusable after parent revocation",
+      "mode": "automated",
+      "operation": "use",
+      "input": {
+        "ref": "../../examples/capability.json",
+        "context": ["../../examples/request.json"],
+        "params": {
+          "revoked_cap_ids": ["cap_01J9Z6Q3V8N2K4M7P1R5T0WXAA"]
+        }
+      },
+      "expect": {
+        "outcome": "reject",
+        "error": "CAPABILITY_REVOKED"
+      },
+      "audit": ["capability.revoked"]
+    },
+    {
+      "id": "C3-09",
+      "level": "C3",
+      "title": "L3 action without a consent receipt is rejected",
+      "mode": "automated",
+      "operation": "use",
+      "input": {
+        "ref": "../../examples/capability.json",
+        "context": ["../../examples/request.json"],
+        "mutations": [
+          { "op": "remove", "path": "/consent_receipt_id" }
+        ],
+        "params": { "risk": "L3" }
+      },
+      "expect": {
+        "outcome": "reject",
+        "error": "POLICY_CONSENT_REQUIRED"
+      }
+    },
+    {
+      "id": "C3-10",
+      "level": "C3",
+      "title": "expired consent receipt is rejected",
+      "mode": "automated",
+      "operation": "use",
+      "input": {
+        "ref": "../../examples/consent-receipt.json",
+        "context": ["../../examples/capability.json", "../../examples/request.json"],
+        "mutations": [
+          { "op": "replace", "path": "/constraints/expires_at", "value": "2026-11-10T09:00:00Z" }
+        ]
+      },
+      "expect": {
+        "outcome": "reject",
+        "error": "POLICY_CONSENT_EXPIRED"
+      }
+    },
+    {
+      "id": "C3-11",
+      "level": "C3",
+      "title": "consent receipt with insufficient scope is rejected",
+      "mode": "automated",
+      "operation": "use",
+      "input": {
+        "ref": "../../examples/consent-receipt.json",
+        "context": ["../../examples/capability.json", "../../examples/request.json"],
+        "mutations": [
+          { "op": "replace", "path": "/actions", "value": ["read"] }
+        ]
+      },
+      "expect": {
+        "outcome": "reject",
+        "error": "POLICY_CONSENT_SCOPE_MISMATCH"
+      }
+    },
+    {
+      "id": "C3-12",
+      "level": "C3",
+      "title": "consent receipt audience mismatch is rejected",
+      "mode": "automated",
+      "operation": "use",
+      "input": {
+        "ref": "../../examples/consent-receipt.json",
+        "context": ["../../examples/capability.json", "../../examples/request.json"],
+        "mutations": [
+          { "op": "replace", "path": "/audience", "value": "agent://com.example.notes/agent#77" }
+        ]
+      },
+      "expect": {
+        "outcome": "reject",
+        "error": "POLICY_CONSENT_SCOPE_MISMATCH"
+      }
+    }
+  ]
+}

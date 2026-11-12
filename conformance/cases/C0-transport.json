@@ -1,0 +1,125 @@
+{
+  "level": "C0",
+  "cases": [
+    {
+      "id": "C0-01",
+      "level": "C0",
+      "title": "request before hello is rejected",
+      "mode": "manual",
+      "operation": "handshake",
+      "preconditions": ["transport connected", "hello/welcome not completed"],
+      "steps": [
+        "open a connection to the Bus",
+        "send the envelope in examples/request.json without sending hello",
+        "read the error frame"
+      ],
+      "expect": {
+        "outcome": "reject",
+        "error": "TRANSPORT_HANDSHAKE_REQUIRED"
+      }
+    },
+    {
+      "id": "C0-02",
+      "level": "C0",
+      "title": "incompatible major version is rejected",
+      "mode": "automated",
+      "operation": "handshake",
+      "input": {
+        "params": {
+          "hello": {
+            "osap": "1.0"
+          }
+        }
+      },
+      "expect": {
+        "outcome": "reject",
+        "error": "TRANSPORT_VERSION_UNSUPPORTED"
+      }
+    },
+    {
+      "id": "C0-03",
+      "level": "C0",
+      "title": "frame above 8 MiB is rejected",
+      "mode": "automated",
+      "operation": "frame",
+      "input": {
+        "params": {
+          "frame_bytes": 8388609
+        }
+      },
+      "expect": {
+        "outcome": "reject",
+        "error": "TRANSPORT_FRAME_TOO_LARGE"
+      },
+      "notes": "8388608 bytes (8 MiB exactly) is the inclusive upper bound and MUST be accepted."
+    },
+    {
+      "id": "C0-04",
+      "level": "C0",
+      "title": "unknown message type is rejected",
+      "mode": "automated",
+      "operation": "send",
+      "input": {
+        "ref": "../../examples/request.json",
+        "mutations": [
+          { "op": "replace", "path": "/type", "value": "bogus" }
+        ]
+      },
+      "expect": {
+        "outcome": "reject",
+        "error": "SCHEMA_UNSUPPORTED"
+      }
+    },
+    {
+      "id": "C0-05",
+      "level": "C0",
+      "title": "duplicate request id does not repeat side effects",
+      "mode": "automated",
+      "operation": "replay",
+      "input": {
+        "ref": "../../examples/request.json",
+        "params": { "repeat": 2 }
+      },
+      "expect": {
+        "outcome": "accept",
+        "state": { "side_effects": 1, "idempotent_replay": true }
+      }
+    },
+    {
+      "id": "C0-06",
+      "level": "C0",
+      "title": "message transport must not require a length prefix",
+      "mode": "manual",
+      "operation": "frame",
+      "preconditions": ["transport_kind includes message"],
+      "steps": [
+        "declare a message-kind transport in hello",
+        "send a complete message without a length prefix",
+        "observe whether the receiver accepts it"
+      ],
+      "expect": {
+        "outcome": "observe",
+        "notes": "A conforming message transport accepts the frame; requiring a length prefix makes the implementation non-conforming."
+      }
+    },
+    {
+      "id": "C0-07",
+      "level": "C0",
+      "title": "clock rollback does not extend timeouts",
+      "mode": "automated",
+      "operation": "clock",
+      "input": {
+        "ref": "../../examples/request.json",
+        "params": {
+          "skew_seconds": -120,
+          "resume_after_suspend": true
+        }
+      },
+      "expect": {
+        "outcome": "reject",
+        "error": "TIMEOUT"
+      },
+      "notes": "Deadlines use a monotonic clock; a wall-clock rollback or suspend/resume MUST NOT revive an expired request."
+    }
+  ]
+}

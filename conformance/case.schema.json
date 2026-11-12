@@ -1,0 +1,155 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:osap:schema:conformance-case:0.1",
+  "title": "OSAP Conformance Case",
+  "description": "One machine-readable conformance case. The identifier space is owned by docs/conformance.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "level", "title", "expect"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^C[0-7]-[0-9]{2}$"
+    },
+    "level": {
+      "type": "string",
+      "enum": ["C0", "C1", "C2", "C3", "C4", "C5", "C6", "C7"]
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "mode": {
+      "type": "string",
+      "enum": ["automated", "manual"],
+      "default": "automated"
+    },
+    "preconditions": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "operation": {
+      "type": "string",
+      "enum": [
+        "handshake",
+        "send",
+        "frame",
+        "clock",
+        "attenuate",
+        "use",
+        "delegate",
+        "handoff",
+        "cancel",
+        "discover",
+        "resolve",
+        "restart",
+        "replay"
+      ]
+    },
+    "input": { "$ref": "#/$defs/input" },
+    "steps": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "expect": { "$ref": "#/$defs/expect" },
+    "audit": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "notes": { "type": "string" }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": { "mode": { "const": "manual" } },
+        "required": ["mode"]
+      },
+      "then": { "required": ["steps"] }
+    },
+    {
+      "if": {
+        "properties": { "mode": { "const": "automated" } },
+        "required": ["mode"]
+      },
+      "then": { "required": ["input"] }
+    },
+    {
+      "if": {
+        "properties": {
+          "expect": {
+            "properties": { "outcome": { "const": "reject" } },
+            "required": ["outcome"]
+          }
+        },
+        "required": ["expect"]
+      },
+      "then": {
+        "properties": {
+          "expect": { "required": ["error"] }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "ref": {
+          "type": "string",
+          "description": "Path to the primary fixture, relative to the case file."
+        },
+        "context": {
+          "type": "array",
+          "description": "Additional fixtures (envelope, receipt, task) resolved before running the case.",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "mutations": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/mutation" }
+        },
+        "params": {
+          "type": "object",
+          "description": "Operation-specific parameters when no fixture applies."
+        }
+      }
+    },
+    "mutation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["op", "path"],
+      "properties": {
+        "op": {
+          "type": "string",
+          "enum": ["add", "replace", "remove", "extend", "truncate"]
+        },
+        "path": {
+          "type": "string",
+          "pattern": "^/"
+        },
+        "value": {}
+      }
+    },
+    "expect": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["outcome"],
+      "properties": {
+        "outcome": {
+          "type": "string",
+          "enum": ["accept", "reject", "observe"],
+          "description": "accept: the operation succeeds; reject: it fails with error; observe: no automatic verdict, the report records the observation."
+        },
+        "error": {
+          "type": "string",
+          "pattern": "^[A-Z][A-Z0-9_]*$"
+        },
+        "state": {
+          "type": "object",
+          "description": "Expected state keys; only these keys are compared."
+        },
+        "notes": { "type": "string" }
+      }
+    }
+  }
+}

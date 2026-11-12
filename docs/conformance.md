@@ -59,49 +59,48 @@
 
 ### 3.1 结构
 
-建议的测试目录：
+机器可读用例位于 [`conformance/cases/`](../conformance/cases/)，每个等级一个文件：
 
 ```
-tests/
-  conformance/
-    C0_transport/
-    C1_identity/
-    C2_registry/
-    C3_authorization/
-    C4_collaboration/
-    C5_context/
-    C6_federation/
-    fixtures/
-    run.py
+conformance/
+  README.md
+  case.schema.json
+  suite.schema.json
+  report.schema.json
+  cases/
+    C0-transport.json
+    C1-identity.json
+    ...
 ```
 
-每个测试 MUST 包含：
-
-- `name`
-- `level`
-- `preconditions`
-- `steps`
-- `expected`
-- `audit_assertions`（可选）
+每个用例 MUST 包含 `id`、`level`、`title`、`expect`；可选 `mode`、`preconditions`、`operation`、`input`、`steps`、`audit`、`notes`。字段定义见 [`conformance/README.md`](../conformance/README.md)。
 
 ### 3.2 测试格式
 
 ```json
 {
-  "name": "C3-attenuation-reject-widen-actions",
+  "id": "C3-04",
   "level": "C3",
-  "preconditions": ["capability issued with actions=[read]"],
-  "steps": [
-    "request attenuation with actions=[read, write]",
-    "attempt to exercise write"
-  ],
-  "expected": [
-    "attenuation rejected with CAPABILITY_ATTENUATION_INVALID",
-    "write is not executed",
-    "audit contains capability.attenuation_denied"
-  ]
+  "title": "widening actions during attenuation is rejected",
+  "mode": "automated",
+  "operation": "attenuate",
+  "input": {
+    "ref": "../../examples/capability.json",
+    "mutations": [
+      { "op": "replace", "path": "/actions", "value": ["propose", "create"] }
+    ]
+  },
+  "expect": { "outcome": "reject", "error": "CAPABILITY_ATTENUATION_INVALID" }
 }
 ```
+
+### 3.3 运行
+
+```bash
+python3 tools/conformance_run.py --impl path/to/adapter.py --format md
+```
+
+适配器 API 与 mutation 语义见 [`conformance/README.md`](../conformance/README.md)；报告格式见 [`conformance/report.schema.json`](../conformance/report.schema.json)。
 
 ---
 

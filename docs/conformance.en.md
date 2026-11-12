@@ -60,49 +60,48 @@ An implementation MUST declare the following in its documentation or in `hello`:
 
 ### 3.1 Structure
 
-Recommended test directory:
+Machine-readable cases live in [`conformance/cases/`](../conformance/cases/), one file per level:
 
 ```
-tests/
-  conformance/
-    C0_transport/
-    C1_identity/
-    C2_registry/
-    C3_authorization/
-    C4_collaboration/
-    C5_context/
-    C6_federation/
-    fixtures/
-    run.py
+conformance/
+  README.md
+  case.schema.json
+  suite.schema.json
+  report.schema.json
+  cases/
+    C0-transport.json
+    C1-identity.json
+    ...
 ```
 
-Each test MUST contain:
-
-- `name`
-- `level`
-- `preconditions`
-- `steps`
-- `expected`
-- `audit_assertions` (optional)
+Each case MUST contain `id`, `level`, `title`, and `expect`; optional fields are `mode`, `preconditions`, `operation`, `input`, `steps`, `audit`, and `notes`. Field definitions are in [`conformance/README.md`](../conformance/README.md).
 
 ### 3.2 Test format
 
 ```json
 {
-  "name": "C3-attenuation-reject-widen-actions",
+  "id": "C3-04",
   "level": "C3",
-  "preconditions": ["capability issued with actions=[read]"],
-  "steps": [
-    "request attenuation with actions=[read, write]",
-    "attempt to exercise write"
-  ],
-  "expected": [
-    "attenuation rejected with CAPABILITY_ATTENUATION_INVALID",
-    "write is not executed",
-    "audit contains capability.attenuation_denied"
-  ]
+  "title": "widening actions during attenuation is rejected",
+  "mode": "automated",
+  "operation": "attenuate",
+  "input": {
+    "ref": "../../examples/capability.json",
+    "mutations": [
+      { "op": "replace", "path": "/actions", "value": ["propose", "create"] }
+    ]
+  },
+  "expect": { "outcome": "reject", "error": "CAPABILITY_ATTENUATION_INVALID" }
 }
 ```
+
+### 3.3 Running
+
+```bash
+python3 tools/conformance_run.py --impl path/to/adapter.py --format md
+```
+
+The adapter API and mutation semantics are in [`conformance/README.md`](../conformance/README.md); the report format is in [`conformance/report.schema.json`](../conformance/report.schema.json).
 
 ---
 

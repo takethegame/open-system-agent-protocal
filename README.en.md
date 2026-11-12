@@ -79,8 +79,9 @@ For a more detailed positioning and prior work, see [`docs/prior-art.md`](docs/p
 ```
 docs/                 Specification, conformance, prior work, design notes, roadmap
 schemas/              JSON Schema (envelope, capability, task, manifest, capability record, receipt, audit, payload)
+conformance/          Machine-readable conformance cases, case schemas, report schema
 examples/             Example messages and objects
-tools/                Validation scripts (examples, schemas, docs)
+tools/                Validation scripts (examples, schemas, docs, conformance)
 .github/workflows/    CI
 GOVERNANCE.md         Governance draft
 CONTRIBUTING.md       Contribution process and DCO
@@ -103,6 +104,7 @@ python3 -m pip install -r requirements.txt
 python3 tools/check_schemas.py     # schema meta-validation and $id uniqueness
 python3 tools/validate_examples.py # examples and cross-document checks
 python3 tools/check_docs.py        # JSON blocks, links, zh/en parity
+python3 tools/conformance_run.py --stub  # conformance case format
 ```
 
 All three run in CI; dependencies are in `requirements.txt` (Python 3.9+).

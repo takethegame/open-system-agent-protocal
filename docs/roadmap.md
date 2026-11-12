@@ -110,20 +110,21 @@ tools/check_docs.py        OK: 96 checks passed across 18 Markdown files
 
 ```
 conformance/
-  README.md                 用例格式与贡献方式
+  README.md                 用例格式、适配器 API、新增流程
+  case.schema.json          单个用例
+  suite.schema.json         按 level 分组的用例文件
+  report.schema.json        运行报告（对应 standard §12.4）
   cases/
-    C0-transport.json
-    C1-identity.json
-    C2-registry.json
-    C3-authorization.json
-    C4-collaboration.json
-    C5-context.json
-    C6-federation.json
-    C7-full.json
-  report.schema.json        报告格式（对应 standard §12.4）
+    C0-transport.json       已完成（7）
+    C3-authorization.json   已完成（12）
+    C1-identity.json        待迁移
+    C2-registry.json        待迁移
+    C4-collaboration.json   待迁移
+    C5-context.json         待迁移
+    C6-federation.json      待迁移
+    C7-full.json            待迁移
 tools/
-  conformance_run.py        加载用例 → 调用实现 → 生成报告
-  mutate_examples.py        从 examples/ 派生负向用例
+  conformance_run.py        加载 → 校验 → 应用 mutation → 调用适配器 → 生成报告
 ```
 
 单个用例的形状：
@@ -132,32 +133,46 @@ tools/
 {
   "id": "C3-01",
   "level": "C3",
-  "title": "audience mismatch",
-  "input": { "ref": "../../examples/request.json" },
-  "mutations": [
-    { "op": "replace", "path": "/auth/audience", "value": "agent://other/agent#1" }
-  ],
+  "title": "audience mismatch is rejected",
+  "mode": "automated",
+  "operation": "use",
+  "input": {
+    "ref": "../../examples/capability.json",
+    "context": ["../../examples/request.json"],
+    "mutations": [
+      { "op": "replace", "path": "/audience", "value": "agent://com.example.notes/agent#77" }
+    ]
+  },
   "expect": { "outcome": "reject", "error": "CAPABILITY_AUDIENCE_MISMATCH" }
 }
 ```
 
 **任务**
 
-- [ ] 定义用例 JSON Schema（`conformance/case.schema.json`）并纳入 CI
-- [ ] 把 68 个用例逐条迁移，保持 ID 与 `docs/conformance.md` 一致
-- [ ] 实现 `mutate_examples.py`：支持 `replace` / `delete` / `extend-array`
-- [ ] 实现 `conformance_run.py`：
-  - [ ] `--impl` 适配器接口（进程内 Python 或外部命令）
-  - [ ] `--level` 过滤
-  - [ ] 输出 JSON 与 Markdown 两种报告
-  - [ ] 未实现的能力标记 `skip` 而非 `fail`
-- [ ] 提供 `tools/conformance_stub.py`：一个永远返回 `skip` 的空实现，用于自测 runner
-- [ ] 在 `docs/conformance.md` 增加“用例文件位置”一节（不改变编号）
+- [x] 定义用例 JSON Schema（`case` / `suite` / `report`）并纳入 CI
+- [ ] 把 68 个用例逐条迁移，保持 ID 与 `docs/conformance.md` 一致（已完成 19：C0 7 + C3 12）
+- [x] mutation 引擎（内置在 runner：`replace` / `add` / `remove` / `extend` / `truncate`）
+- [x] 实现 `conformance_run.py`：
+  - [x] `--impl` 适配器接口（Python 文件，暴露 `conformance_check`）
+  - [x] `--level` 过滤
+  - [x] 输出 text / JSON / Markdown 三种报告
+  - [x] 未实现的能力标记 `skip` 而非 `fail`
+- [x] 用 `--stub` 代替独立的 stub 实现（无适配器时全部 `skip`）
+- [x] 在 `docs/conformance.md` 增加“结构 / 格式 / 运行”三节（3.1–3.3，编号不变）
+- [ ] 迁移 C1、C2、C4–C7 剩余 49 个用例
+
+**当前状态**：`--stub` 输出
+
+```
+19 cases [C0, C3]: 0 pass, 0 fail, 19 skip
+```
+
+用临时回显适配器验证过完整链路（19 条中 17 pass、2 条 manual skip），报告通过 `report.schema.json`。
 
 **退出标准**
 
 - 68 个用例全部可加载，schema 校验通过；
-- 用 stub 实现跑 runner，输出 68 条 `skip`，报告通过 schema 校验；
+- 用 `--stub` 跑 runner，输出 68 条 `skip`，报告通过 schema 校验；
 - CI 中加入 `conformance_run.py --stub`。
 
 **注意**：`standard.md` §12.3 规定 `conformance.md` 是测试编号的唯一来源。迁移时**不得新增或重编号**；新增用例必须先改 `conformance.md`。

@@ -79,8 +79,9 @@ OSAP 的目标不是“再发明一个 Agent 协议”，而是定义 **本地�
 ```
 docs/                 规范、一致性、先行工作、设计说明、路线图
 schemas/              JSON Schema（信封、能力、任务、清单、能力记录、回执、审计、payload）
+conformance/          机器可读一致性用例、用例 schema、运行报告 schema
 examples/             示例消息与对象
-tools/                校验脚本（示例、schema、文档）
+tools/                校验脚本（示例、schema、文档、一致性）
 .github/workflows/    CI
 GOVERNANCE.md         治理草案
 CONTRIBUTING.md       贡献流程与 DCO
@@ -103,6 +104,7 @@ python3 -m pip install -r requirements.txt
 python3 tools/check_schemas.py     # schema 元校验与 $id 唯一性
 python3 tools/validate_examples.py # 示例与跨文档校验
 python3 tools/check_docs.py        # JSON 块、断链、中英结构一致性
+python3 tools/conformance_run.py --stub  # 一致性用例格式
 ```
 
 三者都在 CI 中运行；依赖见 `requirements.txt`（Python 3.9+）。

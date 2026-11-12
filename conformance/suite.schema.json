@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:osap:schema:conformance-suite:0.1",
+  "title": "OSAP Conformance Suite",
+  "description": "One file per conformance level. Case identifiers MUST match docs/conformance.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["level", "cases"],
+  "properties": {
+    "level": {
+      "type": "string",
+      "enum": ["C0", "C1", "C2", "C3", "C4", "C5", "C6", "C7"]
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "urn:osap:schema:conformance-case:0.1" }
+    }
+  }
+}

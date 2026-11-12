@@ -11,6 +11,8 @@ Entries are written in English to match commit messages; the Chinese text in
 
 ### Added
 
+- `conformance/`: machine-readable conformance cases for C0 (7) and C3 (12), plus `case.schema.json`, `suite.schema.json`, `report.schema.json`, and `README.md`.
+- `tools/conformance_run.py`: loads and validates cases, applies JSON Pointer mutations, runs an implementation adapter, and emits text, JSON, or Markdown reports.
 - `docs/roadmap.md`: milestone plan from 0.1 to 0.2 (M0–M5, decision gates, risk register).
 - `SECURITY.md` / `SECURITY.en.md`: disclosure channel, timelines, security review triggers.
 - `.github/workflows/ci.yml`: schema meta-validation, example validation, and documentation checks on Python 3.11 and 3.12.
@@ -25,7 +27,7 @@ Entries are written in English to match commit messages; the Chinese text in
 
 ### Planned
 
-- M1: machine-readable conformance cases (`conformance/cases/`) and `tools/conformance_run.py`.
+- M1: migrate the remaining C1, C2, C4–C7 cases (49 of 68).
 
 ## [0.1.0] - 2026-11-10
 

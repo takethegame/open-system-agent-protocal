@@ -41,3 +41,6 @@ jobs:
 
       - name: Check documentation
         run: python tools/check_docs.py
+
+      - name: Check conformance suite
+        run: python tools/conformance_run.py --stub

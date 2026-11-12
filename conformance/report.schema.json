@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:osap:schema:conformance-report:0.1",
+  "title": "OSAP Conformance Report",
+  "description": "Result of running the conformance suite against one implementation. See standard.md §12.4.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["osap", "generated_at", "cases", "summary"],
+  "properties": {
+    "osap": { "const": "0.1" },
+    "implementation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "version": { "type": "string" },
+        "level": { "$ref": "#/$defs/level" },
+        "features": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "uniqueItems": true
+        }
+      }
+    },
+    "generated_at": { "type": "string", "format": "date-time" },
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "level", "status"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^C[0-7]-[0-9]{2}$" },
+          "level": { "$ref": "#/$defs/level" },
+          "status": { "type": "string", "enum": ["pass", "fail", "skip"] },
+          "expected": { "type": "object" },
+          "actual": { "type": "object" },
+          "reason": { "type": "string" }
+        }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["total", "pass", "fail", "skip"],
+      "properties": {
+        "total": { "type": "integer", "minimum": 0 },
+        "pass": { "type": "integer", "minimum": 0 },
+        "fail": { "type": "integer", "minimum": 0 },
+        "skip": { "type": "integer", "minimum": 0 }
+      }
+    }
+  },
+  "$defs": {
+    "level": {
+      "type": "string",
+      "enum": ["C0", "C1", "C2", "C3", "C4", "C5", "C6", "C7"]
+    }
+  }
+}
