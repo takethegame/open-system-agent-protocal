@@ -1,0 +1,236 @@
+{
+  "level": "C6",
+  "cases": [
+    {
+      "id": "C6-01",
+      "level": "C6",
+      "title": "Android AppFunction projects to a capability record with native identity",
+      "mode": "automated",
+      "operation": "index",
+      "input": {
+        "ref": "../../examples/capability-record.json"
+      },
+      "expect": {
+        "outcome": "accept",
+        "state": {
+          "source_kind": "vendor_registry",
+          "registry": "android.appfunctions",
+          "native_id": "com.example.calendar.createEvent",
+          "trust": "system"
+        }
+      },
+      "notes": "The record already models an AppFunction; the adapter MUST preserve source, native_id, and trust."
+    },
+    {
+      "id": "C6-02",
+      "level": "C6",
+      "title": "Apple App Intent projects to a capability record with native identity",
+      "mode": "automated",
+      "operation": "index",
+      "input": {
+        "ref": "../../examples/capability-record.json",
+        "mutations": [
+          {
+            "op": "replace",
+            "path": "/source",
+            "value": {
+              "kind": "vendor_registry",
+              "registry": "apple.app_intents",
+              "native_id": "com.example.calendar.CreateEventIntent",
+              "version": "3.2.1"
+            }
+          }
+        ]
+      },
+      "expect": {
+        "outcome": "accept",
+        "state": {
+          "source_kind": "vendor_registry",
+          "registry": "apple.app_intents",
+          "native_id": "com.example.calendar.CreateEventIntent",
+          "trust": "system"
+        }
+      },
+      "notes": "The intent identifier MUST be preserved as native_id (standard.md §6.7)."
+    },
+    {
+      "id": "C6-03",
+      "level": "C6",
+      "title": "Windows App Action projects to a capability record with native identity",
+      "mode": "automated",
+      "operation": "index",
+      "input": {
+        "ref": "../../examples/capability-record.json",
+        "mutations": [
+          {
+            "op": "replace",
+            "path": "/source",
+            "value": {
+              "kind": "vendor_registry",
+              "registry": "windows.app_actions",
+              "native_id": "com.example.calendar.CreateEventAction",
+              "version": "1.4.0"
+            }
+          }
+        ]
+      },
+      "expect": {
+        "outcome": "accept",
+        "state": {
+          "source_kind": "vendor_registry",
+          "registry": "windows.app_actions",
+          "native_id": "com.example.calendar.CreateEventAction",
+          "trust": "system"
+        }
+      },
+      "notes": "The action identifier MUST be preserved as native_id (standard.md §6.7)."
+    },
+    {
+      "id": "C6-04",
+      "level": "C6",
+      "title": "MCP tool projection preserves server, tool, and schema",
+      "mode": "automated",
+      "operation": "index",
+      "input": {
+        "ref": "../../examples/capability-record.json",
+        "mutations": [
+          {
+            "op": "replace",
+            "path": "/source",
+            "value": {
+              "kind": "mcp",
+              "registry": "mcp",
+              "native_id": "calendar-server:create_event",
+              "version": "2026-06-01"
+            }
+          }
+        ]
+      },
+      "expect": {
+        "outcome": "accept",
+        "state": {
+          "source_kind": "mcp",
+          "server": "calendar-server",
+          "tool": "create_event",
+          "schema": "osap.calendar.event/v1"
+        }
+      },
+      "notes": "native_id is server + tool; the mapped schema MUST stay attached to the record."
+    },
+    {
+      "id": "C6-05",
+      "level": "C6",
+      "title": "A2A skill projection preserves the agent card and skill id",
+      "mode": "automated",
+      "operation": "index",
+      "input": {
+        "ref": "../../examples/capability-record.json",
+        "mutations": [
+          {
+            "op": "replace",
+            "path": "/source",
+            "value": {
+              "kind": "a2a",
+              "registry": "a2a",
+              "native_id": "https://calendar.example/.well-known/agent.json#create_event",
+              "version": "0.2.1"
+            }
+          }
+        ]
+      },
+      "expect": {
+        "outcome": "accept",
+        "state": {
+          "source_kind": "a2a",
+          "agent_card": "https://calendar.example/.well-known/agent.json",
+          "skill": "create_event"
+        }
+      },
+      "notes": "The Agent Card URL and skill id MUST both remain recoverable from the projection."
+    },
+    {
+      "id": "C6-06",
+      "level": "C6",
+      "title": "D-Bus method projection preserves bus, path, interface, and method",
+      "mode": "automated",
+      "operation": "index",
+      "input": {
+        "ref": "../../examples/capability-record.json",
+        "mutations": [
+          {
+            "op": "replace",
+            "path": "/source",
+            "value": {
+              "kind": "dbus",
+              "registry": "dbus",
+              "native_id": "session:org.example.Calendar:/org/example/Calendar:org.example.Calendar.CreateEvent",
+              "version": "1.0.0"
+            }
+          }
+        ]
+      },
+      "expect": {
+        "outcome": "accept",
+        "state": {
+          "source_kind": "dbus",
+          "bus": "session",
+          "path": "/org/example/Calendar",
+          "interface": "org.example.Calendar",
+          "method": "CreateEvent"
+        }
+      },
+      "notes": "native_id follows the §6.7 shape bus:path:interface; the method is the trailing segment."
+    },
+    {
+      "id": "C6-07",
+      "level": "C6",
+      "title": "external content is marked external and never trusted as system",
+      "mode": "automated",
+      "operation": "index",
+      "input": {
+        "ref": "../../examples/capability-record.json",
+        "mutations": [
+          {
+            "op": "replace",
+            "path": "/source",
+            "value": {
+              "kind": "mcp",
+              "registry": "mcp",
+              "native_id": "external-server:summarize"
+            }
+          },
+          { "op": "replace", "path": "/provenance/trust", "value": "system" }
+        ]
+      },
+      "expect": {
+        "outcome": "accept",
+        "state": {
+          "origin": "external",
+          "trust": "unverified"
+        }
+      },
+      "notes": "An external protocol source claiming system trust MUST be normalized down to unverified (standard.md §6.4)."
+    },
+    {
+      "id": "C6-08",
+      "level": "C6",
+      "title": "native capability changes update or invalidate the record within TTL",
+      "mode": "manual",
+      "operation": "index",
+      "preconditions": [
+        "a native capability is projected and indexed",
+        "its freshness TTL has not elapsed"
+      ],
+      "steps": [
+        "change the native descriptor (rename or remove the capability)",
+        "query discovery before the TTL elapses",
+        "query discovery after the TTL elapses",
+        "inspect the capability record and the audit trail"
+      ],
+      "expect": {
+        "outcome": "observe",
+        "notes": "The record MUST be updated or invalidated no later than TTL; a removed capability MUST NOT remain discoverable after TTL."
+      }
+    }
+  ]
+}
