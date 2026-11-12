@@ -2,6 +2,7 @@
 
 > 状态：工作计划（非规范性） · 2026-11-12
 > 关联规范：[`standard.md`](standard.md) 0.1 Draft
+> 进展记录：[`progress.md`](progress.md)
 > 说明：本文只安排**怎么把 0.1 变成可信、可验证、可提交的草案**，不新增协议语义。任何语义变更仍须走 `GOVERNANCE.md` §3 的提案流程。
 
 ---
@@ -161,13 +162,13 @@ tools/
 - [x] 在 `docs/conformance.md` 增加“结构 / 格式 / 运行”三节（3.1–3.3，编号不变）
 - [ ] 迁移 C1、C2、C4–C7 剩余 49 个用例
 
-**当前状态**：`--stub` 输出
+**当前状态**：19/68（C0 7 + C3 12）。`--stub` 输出
 
 ```
 19 cases [C0, C3]: 0 pass, 0 fail, 19 skip
 ```
 
-用临时回显适配器验证过完整链路（19 条中 17 pass、2 条 manual skip），报告通过 `report.schema.json`。
+用临时回显适配器验证过完整链路（19 条中 17 pass、2 条 manual skip），报告通过 `report.schema.json`。逐条拆分与夹具缺口见 [`progress.md`](progress.md) §4.6–§4.7。
 
 **退出标准**
 
