@@ -8,22 +8,35 @@ Run with:
 
 M2.1 covers the envelope, the error model, and both framing bindings.
 M2.2 adds identity, Ed25519-signed manifests, and the registry subset.
+M2.3 adds capability tokens, attenuation, binding, and revocation.
+M2.4 adds consent receipts and their linkage to capabilities.
 Cases outside the implemented scope return `skip` with the milestone that
 will pick them up, so a partial implementation reports honestly.
 """
 
 from __future__ import annotations
 
+import copy
 import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from osap import Bus, Deadline, OsapError, crypto, framing, identity, registry  # noqa: E402
+from osap import (  # noqa: E402
+    Bus,
+    Deadline,
+    OsapError,
+    capability,
+    consent,
+    crypto,
+    framing,
+    identity,
+    registry,
+)
+from osap.clock import parse_timestamp  # noqa: E402
 
 MILESTONES = {
-    "C3": "M2.3 capabilities and M2.4 consent",
     "C4": "M2.5 task model",
     "C5": "M2.5 context fabric",
     "C6": "M2.5 federation adapters",
@@ -124,7 +137,7 @@ def _dev_registry(include_notes: bool = True) -> registry.Registry:
 
 def conformance_check(case: dict, documents: dict) -> dict:
     level = case.get("level")
-    handler = {"C0": _check_c0, "C1": _check_c1, "C2": _check_c2}.get(level)
+    handler = {"C0": _check_c0, "C1": _check_c1, "C2": _check_c2, "C3": _check_c3}.get(level)
     if handler is None:
         return {
             "outcome": "skip",
@@ -288,3 +301,91 @@ def _check_c2_discover(response: dict) -> dict:
             },
         }
     return {"outcome": "accept", "state": {"leaked_data": leaked}}
+
+
+# --- C3 authorization -------------------------------------------------------
+
+
+def _receiver(envelope: dict) -> str:
+    """Resolve the receiving agent from `to`, using the registry (§5.4)."""
+
+    target = envelope.get("to") or {}
+    if "agent" in target:
+        return target["agent"]
+    cap_uri = target.get("capability")
+    if not cap_uri:
+        raise OsapError("ROUTING_NOT_FOUND", "envelope has no routable target")
+    found = _dev_registry().capability_descriptor(cap_uri)
+    if found is None:
+        raise OsapError("ROUTING_NOT_FOUND", f"unknown capability: {cap_uri}")
+    return found[1]
+
+
+def _risk_of(envelope: dict) -> str | None:
+    cap_uri = (envelope.get("to") or {}).get("capability")
+    return _dev_registry().risk_of(cap_uri) if cap_uri else None
+
+
+def _parent_of(pristine: dict) -> dict:
+    """Derive the parent token from a pristine child fixture.
+
+    The fixture keeps a `parent_cap_id` and a `depth`, so the parent is the
+    same document one level up. Cases then test exactly one dimension.
+    """
+
+    parent = copy.deepcopy(pristine)
+    parent["cap_id"] = pristine["parent_cap_id"]
+    parent["depth"] = max(int(pristine["depth"]) - 1, 0)
+    return parent
+
+
+def _check_c3(case: dict, documents: dict) -> dict:
+    operation = case.get("operation")
+    primary = documents.get("primary")
+    context = documents.get("context") or []
+    params = (case.get("input") or {}).get("params") or {}
+
+    if operation == "attenuate":
+        parent = _parent_of(context[0] if context else primary)
+        child = capability.attenuate(parent, primary)
+        return {
+            "outcome": "accept",
+            "state": {"depth": child["depth"], "cap_id": child["cap_id"]},
+        }
+
+    if operation == "use":
+        if "osap_receipt" in primary:
+            return _check_receipt_use(primary, context)
+        return _check_capability_use(primary, context[0], params)
+
+    return {"outcome": "skip", "reason": f"C3 operation {operation!r} has no automated check"}
+
+
+def _check_capability_use(token: dict, envelope: dict, params: dict) -> dict:
+    capability.validate_token(token)
+    authority = capability.CapabilityAuthority()
+    for cap_id in params.get("revoked_cap_ids") or []:
+        authority.revoke(cap_id)
+
+    # The receiving agent comes from the envelope route, never from the token.
+    audience = _receiver(envelope)
+    authority.check_binding(token, envelope, audience=audience)
+
+    # "Now" is the envelope timestamp so fixtures do not expire over time.
+    authority.check_validity(token, now=parse_timestamp(envelope["ts"]))
+
+    risk = params.get("risk") or _risk_of(envelope)
+    authority.require_consent(token, risk=risk)
+    return {
+        "outcome": "accept",
+        "state": {"audience": audience, "risk": risk, "cap_id": token["cap_id"]},
+    }
+
+
+def _check_receipt_use(receipt: dict, context: list) -> dict:
+    cap, envelope = context[0], context[1]
+    consent.validate(receipt, cap, now=parse_timestamp(envelope["ts"]))
+    return {
+        "outcome": "accept",
+        "state": {"receipt_id": receipt["receipt_id"], "cap_id": cap["cap_id"]},
+    }

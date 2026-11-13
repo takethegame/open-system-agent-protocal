@@ -48,7 +48,10 @@ def record(**overrides) -> dict:
 class RecordIndexTests(unittest.TestCase):
     def test_fresh_record_is_indexed(self):
         instance = registry.Registry()
-        self.assertTrue(instance.index_record(record(), now=datetime(2026, 11, 10, 12, tzinfo=timezone.utc)))
+        indexed = instance.index_record(
+            record(), now=datetime(2026, 11, 10, 12, tzinfo=timezone.utc)
+        )
+        self.assertTrue(indexed)
 
     def test_expired_record_is_not_indexed(self):
         instance = registry.Registry()
@@ -113,7 +116,10 @@ class DiscoveryTests(unittest.TestCase):
         document["policy"]["visibility"] = "hidden"
         self.instance.index_record(document, now=self.now)
         candidates = self.instance.discover({"requires": ["calendar.read"]}, now=self.now)
-        self.assertEqual([item["record_id"] for item in candidates], ["cr_01J9Z6Q3V8N2K4M7P1R5T0WX03"])
+        self.assertEqual(
+            [item["record_id"] for item in candidates],
+            ["cr_01J9Z6Q3V8N2K4M7P1R5T0WX03"],
+        )
 
     def test_expired_records_drop_out_of_discovery(self):
         later = self.now + timedelta(days=2)
@@ -122,6 +128,32 @@ class DiscoveryTests(unittest.TestCase):
     def test_payload_leak_is_detected(self):
         self.assertTrue(registry.leaks_payload([{"record_id": "cr_1", "data": {"secret": 1}}]))
         self.assertTrue(registry.has_live_verdict([{"policy_verdict": "allow"}]))
+
+
+class DescriptorLookupTests(unittest.TestCase):
+    def test_manifest_descriptor_is_resolved_to_an_agent(self):
+        instance = registry.Registry()
+        self.assertIsNone(instance.capability_descriptor("cap://os/calendar/events"))
+
+        private, public = crypto.generate_keypair()
+        manifest = json.loads((EXAMPLES / "manifest.json").read_text(encoding="utf-8"))
+        instance.trust(manifest["app"], public)
+        instance.index_manifest(crypto.sign_document(manifest, private))
+
+        descriptor, agent = instance.capability_descriptor("cap://os/calendar/events")
+        self.assertEqual(descriptor["cap"], "cap://os/calendar/events")
+        self.assertEqual(agent, manifest["agents"][0]["agent"])
+        self.assertEqual(instance.risk_of("cap://os/calendar/events"), descriptor["risk"])
+
+    def test_record_descriptor_is_resolved(self):
+        instance = registry.Registry()
+        instance.index_record(record(), now=datetime(2026, 11, 10, 12, tzinfo=timezone.utc))
+        descriptor, agent = instance.capability_descriptor("cap://os/calendar/events")
+        self.assertEqual(agent, "agent://com.example.calendar/agent#9c")
+        self.assertEqual(instance.risk_of("cap://os/calendar/events"), "L2")
+
+    def test_unknown_capability_has_no_risk(self):
+        self.assertIsNone(registry.Registry().risk_of("cap://os/unknown"))
 
 
 if __name__ == "__main__":

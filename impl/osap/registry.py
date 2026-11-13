@@ -82,6 +82,29 @@ class Registry:
                 return entry
         return None
 
+    def capability_descriptor(self, cap_uri: str) -> tuple[dict, str] | None:
+        """Resolve `cap://...` to `(descriptor, agent)` from manifests or records.
+
+        The Bus needs this to turn an envelope route (`to.capability`) into the
+        receiving agent, and to read the declared risk class (§5.1, §5.4).
+        """
+
+        for manifest in self._manifests.values():
+            for entry in manifest.get("agents", []):
+                for descriptor in entry.get("capabilities", []):
+                    if descriptor.get("cap") == cap_uri:
+                        return descriptor, entry["agent"]
+        for record in self._records.values():
+            if record["capability"]["cap"] == cap_uri:
+                return record["capability"], record["agent"]
+        return None
+
+    def risk_of(self, cap_uri: str) -> str | None:
+        """Return the declared risk class for a capability, if known."""
+
+        found = self.capability_descriptor(cap_uri)
+        return found[0].get("risk") if found else None
+
     # --- key rotation ------------------------------------------------------
 
     def mark_rotated(self, agent: str, *, rotated_at: datetime | None = None, grace_seconds: int = 0) -> None:

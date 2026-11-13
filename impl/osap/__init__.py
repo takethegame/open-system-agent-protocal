@@ -7,10 +7,12 @@ Covered so far:
 - M2.1: envelope, error model, stream and message framing, handshake,
   idempotency, and monotonic-clock deadlines (standard.md §7.1–§7.10);
 - M2.2: Ed25519 manifest signatures, agent registration, reserved namespaces,
-  and the registry subset (§4, §6).
+  and the registry subset (§4, §6);
+- M2.3: capability tokens, attenuation, binding, revocation (§5.1-§5.6);
+- M2.4: consent receipts and capability linkage (§5.8).
 """
 
-from . import crypto, identity, registry, schema
+from . import capability, consent, crypto, identity, registry, schema
 from .bus import Bus
 from .clock import Deadline
 from .envelope import KNOWN_TYPES, SUPPORTED_MAJOR, validate
@@ -28,6 +30,8 @@ __all__ = [
     "OsapError",
     "STANDARD_CODES",
     "SUPPORTED_MAJOR",
+    "capability",
+    "consent",
     "crypto",
     "identity",
     "registry",

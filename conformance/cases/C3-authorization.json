@@ -63,6 +63,7 @@
       "operation": "attenuate",
       "input": {
         "ref": "../../examples/capability.json",
+        "context": ["../../examples/capability.json"],
         "mutations": [
           { "op": "replace", "path": "/actions", "value": ["propose", "create"] }
         ]
@@ -80,6 +81,7 @@
       "operation": "attenuate",
       "input": {
         "ref": "../../examples/capability.json",
+        "context": ["../../examples/capability.json"],
         "mutations": [
           { "op": "replace", "path": "/resources", "value": ["calendar:primary", "calendar:work"] }
         ]
@@ -97,6 +99,7 @@
       "operation": "attenuate",
       "input": {
         "ref": "../../examples/capability.json",
+        "context": ["../../examples/capability.json"],
         "mutations": [
           { "op": "replace", "path": "/exp", "value": 1794312885 }
         ]
@@ -114,6 +117,7 @@
       "operation": "attenuate",
       "input": {
         "ref": "../../examples/capability.json",
+        "context": ["../../examples/capability.json"],
         "mutations": [
           { "op": "replace", "path": "/depth", "value": 3 }
         ]
@@ -122,7 +126,7 @@
         "outcome": "reject",
         "error": "CAPABILITY_ATTENUATION_INVALID"
       },
-      "notes": "max_depth in examples/capability.json is 2."
+      "notes": "max_depth in examples/capability.json is 2. The context is the pristine fixture; the parent token is derived from it (cap_id = parent_cap_id, depth = depth - 1), so only the mutated dimension widens."
     },
     {
       "id": "C3-08",
