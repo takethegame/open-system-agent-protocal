@@ -2,3 +2,4 @@
 # Keep ranges permissive; pin an exact version only when a check breaks.
 jsonschema>=4.18,<5
 referencing>=0.30,<1
+cryptography>=42,<46

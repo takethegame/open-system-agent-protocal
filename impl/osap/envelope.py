@@ -15,19 +15,10 @@ Step 2 runs before the schema so an unknown type reports `SCHEMA_UNSUPPORTED`
 
 from __future__ import annotations
 
-import json
-from functools import lru_cache
-from pathlib import Path
-
-from jsonschema import Draft202012Validator, FormatChecker
-from referencing import Registry, Resource
-from referencing.jsonschema import DRAFT202012
-
+from . import schema
 from .errors import OsapError
 
 SUPPORTED_MAJOR = 0
-
-SCHEMA_DIR = Path(__file__).resolve().parents[2] / "schemas"
 
 #: Message types from standard.md §7.2.
 KNOWN_TYPES = frozenset(
@@ -68,23 +59,6 @@ def major_version(version: str) -> int:
         raise OsapError("SCHEMA_INVALID", f"malformed osap version: {version!r}") from None
 
 
-@lru_cache(maxsize=1)
-def _validator() -> Draft202012Validator:
-    registry = Registry()
-    for path in sorted(SCHEMA_DIR.glob("*.schema.json")):
-        schema = json.loads(path.read_text(encoding="utf-8"))
-        registry = registry.with_resource(
-            schema["$id"],
-            Resource.from_contents(schema, default_specification=DRAFT202012),
-        )
-    schema = json.loads((SCHEMA_DIR / "envelope.schema.json").read_text(encoding="utf-8"))
-    return Draft202012Validator(schema, registry=registry, format_checker=FormatChecker())
-
-
-def _pointer(parts) -> str:
-    return "/" + "/".join(str(part) for part in parts) if parts else "<root>"
-
-
 def validate(message: object) -> dict:
     """Validate one envelope, returning it unchanged or raising `OsapError`."""
 
@@ -113,14 +87,7 @@ def validate(message: object) -> dict:
             details={"known_types": sorted(KNOWN_TYPES)},
         )
 
-    errors = sorted(_validator().iter_errors(message), key=lambda error: list(error.path))
-    if errors:
-        first = errors[0]
-        raise OsapError(
-            "SCHEMA_INVALID",
-            f"{_pointer(first.path)}: {first.message}",
-            details={"path": _pointer(first.path)},
-        )
+    schema.validate("envelope.schema.json", message)
     return message
 
 

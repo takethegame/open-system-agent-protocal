@@ -2,11 +2,15 @@
 # Copyright 2026 The OSAP Authors
 """Reference implementation of an OSAP 0.1 Bus subset.
 
-The package currently covers milestone M2.1: the envelope, the error model,
-and both framing bindings from standard.md §7.1, §7.7, §7.9, and §7.10.
-Later milestones add identity, capabilities, consent, and the task model.
+Covered so far:
+
+- M2.1: envelope, error model, stream and message framing, handshake,
+  idempotency, and monotonic-clock deadlines (standard.md §7.1–§7.10);
+- M2.2: Ed25519 manifest signatures, agent registration, reserved namespaces,
+  and the registry subset (§4, §6).
 """
 
+from . import crypto, identity, registry, schema
 from .bus import Bus
 from .clock import Deadline
 from .envelope import KNOWN_TYPES, SUPPORTED_MAJOR, validate
@@ -24,5 +28,9 @@ __all__ = [
     "OsapError",
     "STANDARD_CODES",
     "SUPPORTED_MAJOR",
+    "crypto",
+    "identity",
+    "registry",
+    "schema",
     "validate",
 ]
