@@ -174,6 +174,7 @@ JSON 报告在 runner 内直接对照 `report.schema.json` 校验，CI 增加了
 
 - 68 个用例全部可加载，schema 校验通过；
 - 用 `--stub` 跑 runner，输出 68 条 `skip`，报告通过 schema 校验；
+- `--stub` 同时校验编号覆盖（与 `docs/conformance.md` 逐条相等）和夹具/mutation 可执行性；
 - CI 中加入 `conformance_run.py --stub` 与 JSON 报告校验。
 
 **注意**：`standard.md` §12.3 规定 `conformance.md` 是测试编号的唯一来源。迁移时**不得新增或重编号**；新增用例必须先改 `conformance.md`。

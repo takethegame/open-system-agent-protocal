@@ -104,7 +104,7 @@ def conformance_check(case: dict, documents: dict) -> dict:
 ## 6. 运行
 
 ```bash
-# 只校验用例格式，不执行（CI 使用）
+# 只校验用例（CI 使用）：schema、编号覆盖、夹具与 mutation 全部执行一遍，但不调用实现
 python3 tools/conformance_run.py --stub
 
 # 对实现运行
@@ -113,6 +113,14 @@ python3 tools/conformance_run.py --impl path/to/adapter.py
 # 只跑某些等级，输出 Markdown 或 JSON
 python3 tools/conformance_run.py --impl adapter.py --level C0,C3 --format md --out report.md
 ```
+
+`--stub` 除了加载 JSON，还会做三件事：
+
+1. 用 `suite.schema.json` / `case.schema.json` 校验每个用例；
+2. 把 `docs/conformance.md` 表格里的编号与用例文件逐一比对，缺号或多号都会失败；
+3. 解析每个 `input.ref`、`context` 并应用全部 mutation，夹具缺失或路径不存在都会失败。
+
+因此“`--stub` 全绿”等价于“68 条用例可加载、可定位夹具、可应用变异”，而不只是 JSON 能解析。
 
 退出码：有任何 `fail` 时为 1；全部 `pass`/`skip` 时为 0。
 

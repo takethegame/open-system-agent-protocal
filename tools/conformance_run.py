@@ -22,6 +22,7 @@ from __future__ import annotations
 import argparse
 import importlib.util
 import json
+import re
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -33,6 +34,7 @@ from referencing.jsonschema import DRAFT202012
 ROOT = Path(__file__).resolve().parents[1]
 CASE_DIR = ROOT / "conformance" / "cases"
 SCHEMA_DIRS = [ROOT / "schemas", ROOT / "conformance"]
+NORMATIVE_IDS = ROOT / "docs" / "conformance.md"
 
 
 class Skip(Exception):
@@ -77,7 +79,7 @@ def load_suites(case_dir: Path, registry: Registry) -> list[tuple[Path, dict]]:
     return suites
 
 
-def check_ids(suites: list[tuple[Path, dict]]) -> None:
+def check_ids(suites: list[tuple[Path, dict]], require_coverage: bool = True) -> None:
     seen: dict[str, str] = {}
     problems = []
     for path, suite in suites:
@@ -92,6 +94,23 @@ def check_ids(suites: list[tuple[Path, dict]]) -> None:
                 )
             else:
                 seen[case["id"]] = path.name
+
+    # docs/conformance.md owns the identifier space (standard.md §12.3): every
+    # declared case must exist, and every case file must cite a declared case.
+    if require_coverage:
+        declared = set(
+            re.findall(
+                r"^\|\s*(C[0-7]-\d{2})\s*\|",
+                NORMATIVE_IDS.read_text(encoding="utf-8"),
+                re.MULTILINE,
+            )
+        )
+        for case_id in sorted(declared - set(seen)):
+            problems.append(f"missing case {case_id} declared in docs/conformance.md")
+        for case_id in sorted(set(seen) - declared):
+            problems.append(
+                f"case {case_id} in {seen[case_id]} is not declared in docs/conformance.md"
+            )
     if problems:
         raise SystemExit("FAIL\n  - " + "\n  - ".join(problems))
 
@@ -225,10 +244,19 @@ def run_case(case: dict, case_file: Path, adapter) -> dict:
     }
     if case.get("mode", "automated") == "manual":
         return {**result, "status": "skip", "reason": "manual case: run the steps by hand"}
+
+    # Materialise fixtures even without an adapter: --stub then proves that every
+    # input.ref exists and every mutation applies, not just that JSON parses.
+    try:
+        documents = build_documents(case, case_file)
+    except SystemExit as exc:
+        return {**result, "status": "fail", "reason": str(exc)}
+    except Exception as exc:
+        return {**result, "status": "fail", "reason": f"fixture error: {exc}"}
+
     if adapter is None:
         return {**result, "status": "skip", "reason": "no implementation adapter (--stub)"}
     try:
-        documents = build_documents(case, case_file)
         actual = adapter(case, documents) or {}
     except Skip as exc:
         return {**result, "status": "skip", "reason": str(exc) or "adapter skipped"}
@@ -314,7 +342,7 @@ def main() -> int:
 
     registry = build_registry()
     suites = load_suites(args.cases, registry)
-    check_ids(suites)
+    check_ids(suites, require_coverage=args.cases.resolve() == CASE_DIR.resolve())
 
     wanted = {item.strip().upper() for item in args.level.split(",") if item.strip()}
     adapter = load_adapter(args.impl) if args.impl else None

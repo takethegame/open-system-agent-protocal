@@ -51,6 +51,8 @@
 | `b3b8ab5` | 2026-11-12 | **M1（续）**：C6 共 8 条（7 automated，1 manual） |
 | `74a41ce` | 2026-11-12 | **M1（续）**：C5 共 11 条；新增上下文句柄与黑板夹具 |
 | `012c9c7` | 2026-11-12 | **M1 完成**：C7 共 7 条；新增审计链夹具；报告纳入 schema 校验 |
+| `e9079cc` | 2026-11-12 | M1 文档收尾（68/68）；`validate_examples.py` 扩到 24 项 |
+| `32db5da` | 2026-11-13 | M1 复核：`--stub` 增加编号覆盖检查与夹具/mutation 实测 |
 
 ---
 
@@ -164,6 +166,15 @@ python3 tools/conformance_run.py --stub --format json --out conformance-report.j
                                             → report 通过 report.schema.json 校验
 ```
 
+M1 收尾时的负向验证（均在临时目录，不随仓库发布）：
+
+| 场景 | 结果 |
+|---|---|
+| 把某条用例的 `input.ref` 指向不存在的夹具 | 该条 `fail`，其余继续执行，退出码 1 |
+| 把 mutation 的 `replace` 路径改成不存在的字段 | 该条 `fail`（`fixture error`） |
+| 只加载 `C7-full.json` 跑 `check_ids` | 报 61 条缺号，退出码非 0 |
+| 完整用例集合跑 `check_ids` | 通过 |
+
 临时回显适配器（不随仓库发布）验证完整链路（C0–C3 共 19 条时）：
 
 | 场景 | 结果 |
@@ -176,7 +187,7 @@ python3 tools/conformance_run.py --stub --format json --out conformance-report.j
 
 ### 4.5 已知限制
 
-1. **没有真实实现**：所有 `pass` 都来自回显适配器，只证明 runner 与用例自洽，不证明协议可实现。
+1. **没有真实实现**：仓库内的 `--stub` 全部为 `skip`，不产生任何 `pass`。此前出现的 `pass` 都来自临时回显适配器，只证明 runner 与用例自洽，不证明协议可实现。
 2. **mutation 只作用于主夹具**：`input.mutations` 不能同时改 `context` 中的多个文档。需要多文档变异时，只能把被改文档设为主夹具（C3-10–C3-12 就是这么做的）。
 3. **缺少运行时状态模型**：C4-01（取消传播）、C7-01（trace 完整性）这类断言依赖实现暴露状态，目前只能标 manual。
 4. **适配器 API 未冻结**：`conformance_check(case, documents)` 可能在 M2 中调整。
@@ -215,7 +226,9 @@ C2/C4/C6 复用 `manifest.json`、`discovery-result.json`、`capability-record.j
 - [x] 68 个用例全部可加载，case / suite schema 校验通过；
 - [x] `--stub` 输出 68 条 `skip`；
 - [x] JSON 报告通过 `report.schema.json` 校验；
-- [x] CI 同时运行用例检查与报告校验。
+- [x] CI 同时运行用例检查与报告校验；
+- [x] 编号覆盖：用例集合与 `docs/conformance.md` 表格逐条相等（缺号/多号即失败）；
+- [x] 夹具可执行：`--stub` 也解析 `input.ref`、`context` 并应用全部 mutation，路径不存在即失败。
 
 后续工作（不属于 M1 退出标准）：
 

@@ -27,6 +27,7 @@ Entries are written in English to match commit messages; the Chinese text in
 - `CONTRIBUTING.md` / `CONTRIBUTING.en.md`: state that the Chinese text is the normative original and `*.en.md` files are parallel translations.
 - `schemas/envelope.schema.json`: require `session_id` when `task.mode` is `peer`, matching standard §8.4.
 - `tools/conformance_run.py`: JSON output is now validated against `report.schema.json`; CI runs the same check.
+- `tools/conformance_run.py --stub`: now also checks case-ID coverage against `docs/conformance.md` and materialises every `input.ref`, `context`, and mutation, so a missing fixture or a bad JSON Pointer fails CI instead of being skipped.
 
 ### Planned
 
