@@ -199,7 +199,8 @@ JSON 报告在 runner 内直接对照 `report.schema.json` 校验，CI 增加了
 
 **拆分**
 
-- [ ] M2.1（3 天）信封 + 传输绑定（`stream` 与 `message` 各一种）+ 错误模型
+- [x] M2.1a 信封 + 错误模型 + 两种分帧编解码（`impl/osap/`，C0 automated 5/5）
+- [ ] M2.1b 真实传输绑定（Linux UDS stream + 一种 message 绑定，含对端认证与回环 demo）
 - [ ] M2.2（5 天）身份与握手 + 保留命名空间 + 签名（Ed25519 / JWS）
 - [ ] M2.3（6 天）能力模型：签发、衰减、绑定、撤销、`max_uses`、预算
 - [ ] M2.4（4 天）同意：风险分级、`consent.request`/`grant`/`deny`、回执与 `cap_id` 预约顺序

@@ -14,7 +14,7 @@
 |---|---|---|---|
 | M0 仓库可信化 | ✅ 完成 | 7/7 | 2026-11-12 |
 | M1 可执行一致性 | ✅ 完成 | 68/68 用例（100%） | 2026-11-12 |
-| M2 参考实现 MVP | ⬜ 未开始 | 0/7 子阶段 | — |
+| M2 参考实现 MVP | 🟡 进行中 | M2.1a 完成（1/8 子阶段） | — |
 | M3 形式化不变量 | ⬜ 未开始 | 0/4 定理 | — |
 | M4 标准打包 | ⬜ 未开始 | 0/4 产出 | — |
 | M5 生态与采用 | ⬜ 未开始 | — | — |
@@ -28,7 +28,8 @@
 | 示例 | 17 |
 | 一致性用例 | 68 / 68 |
 | 校验工具 | 4 |
-| Markdown 文件 | 20 |
+| Markdown 文件 | 21 |
+| 参考实现 | 7 个模块 + 适配器（772 行）+ 32 个单元测试 |
 | 中英平行文档 | 8 对 |
 | CI 工作流 | 1（Python 3.11 / 3.12） |
 
@@ -239,7 +240,70 @@ C2/C4/C6 复用 `manifest.json`、`discovery-result.json`、`capability-record.j
 
 ---
 
-## 5. 待确认的规范问题
+## 5. M2 — 参考实现（进行中）
+
+### 5.1 M2.1a 交付物
+
+`impl/` 是 0.1 的最小参考实现，语言为 Python 3.11+，没有新增依赖（复用 `jsonschema`）。
+
+| 模块 | 行数 | 职责 | 章节 |
+|---|---|---|---|
+| `impl/osap/envelope.py` | 145 | 信封校验、路由键、任务 ID | §7.1 |
+| `impl/osap/errors.py` | 105 | 27 个标准错误码、`OsapError`、`osap.error/v1` body | §7.7 |
+| `impl/osap/framing.py` | 92 | 流式 4 字节大端前缀、消息型原生边界、8 MiB 上限 | §7.9、§7.10 |
+| `impl/osap/clock.py` | 71 | 单调时钟 deadline | §7.8 |
+| `impl/osap/idempotency.py` | 45 | 按 `id` 去重 | §7.8 |
+| `impl/osap/bus.py` | 154 | 握手、校验、路由、幂等、错误回执 | §7.1、§7.9 |
+| `impl/adapter.py` | 132 | 一致性适配器 | — |
+
+`impl/tests/` 有 32 个单元测试，覆盖分帧往返、帧大小边界、校验顺序、幂等、时钟回拨，以及错误码 `retryable` 默认值。
+
+### 5.2 验证证据
+
+```
+python3 -m unittest discover -s impl/tests -t impl
+    → Ran 32 tests ... OK
+python3 tools/conformance_run.py --impl impl/adapter.py
+    → 68 cases [C0..C7]: 5 pass, 0 fail, 63 skip
+python3 tools/conformance_run.py --impl impl/adapter.py --level C0
+    → 7 cases [C0]: 5 pass, 0 fail, 2 skip
+```
+
+C0 的 5 条 automated 全部通过；C0-01（真实连接）与 C0-06（绑定声明）仍是 manual。C1–C7 的 63 条由适配器显式 `skip`，并把“属于哪个里程碑”写进报告，不是静默跳过。
+
+### 5.3 设计决定
+
+| 决定 | 理由 |
+|---|---|
+| 校验顺序：版本 → 类型 → JSON Schema | §7.9 要求未知类型返回 `SCHEMA_UNSUPPORTED`；若先跑 schema，`enum` 会先报 `SCHEMA_INVALID` |
+| 消息型绑定不设统一加前缀的 `encode()` 默认路径 | 避免 C0-06 的“再套一层长度前缀” |
+| deadline 只保存预算，剩余时间一律用 `time.monotonic()` | 墙钟回拨或挂起恢复不得复活请求（C0-07） |
+| `STANDARD_CODES` 单点定义 | 错误码只出现一次，测试反查 §7.7 的 `retryable` 列 |
+| 已定义但未实现的消息类型抛 `NotImplementedError` | 不占用错误码命名空间，也不伪装成 `pass` |
+
+### 5.4 登记的偏差
+
+| 位置 | 偏差 | 处理 |
+|---|---|---|
+| `welcome.body.data` | 规范未定义 `osap.welcome/v1` 的字段 | 返回 `osap`、`binding`、`max_frame_bytes`；M2.2 补齐并回写规范 |
+| 已定义但未实现的消息类型 | 没有对应错误码 | 适配器记 `skip`，报告写明里程碑 |
+
+### 5.5 已知限制
+
+1. 幂等索引与连接状态都在内存，重启即丢；§7.8 要求可重建的持久索引，留给 M2.6。
+2. `auth.token` 只做结构校验，没有签名验证；M2.2 引入 Ed25519。
+3. 两种“绑定”目前只是编解码层，没有接到 UDS / XPC / D-Bus，也没有对端认证；由 M2.1b 处理。
+4. 5 个 pass 只证明信封与分帧，不证明授权或任务语义。
+
+### 5.6 M2.1 剩余工作
+
+- [ ] **M2.1b 真实绑定**：Linux UDS（stream，`SO_PEERCRED`）加一种 message 绑定（macOS XPC 或 D-Bus），含本机回环 demo；
+- [ ] 把 `welcome` 的 body 字段写回 `docs/standard.md`；
+- [ ] 让 C0-01、C0-06 从 manual 变为可执行（需要真实连接与绑定声明）。
+
+---
+
+## 6. 待确认的规范问题
 
 迁移过程中暴露的歧义。M1 用例已按暂定处理落盘，以下条目需在 M2 冻结适配器 API 前定稿（不改编号，只补语义）：
 
@@ -255,15 +319,16 @@ C2/C4/C6 复用 `manifest.json`、`discovery-result.json`、`capability-record.j
 
 ---
 
-## 6. 下一步（按顺序）
+## 7. 下一步（按顺序）
 
-1. 以 M1 用例为验收标准进入 M2.1：信封 + 错误模型；
-2. 在 M2 中把临时回显适配器替换为真实实现，先跑通 C0–C3；
-3. 根据实现反馈修正规范歧义，再冻结适配器 API。
+1. **M2.1b**：补真实传输绑定（UDS stream + 一种 message 绑定），让 C0-01 与 C0-06 可执行；
+2. **M2.2**：身份与握手（Ed25519 签名、保留命名空间、manifest 绑定），跑通 C1 与 C2；
+3. **M2.3 / M2.4**：能力模型与同意回执，跑通 C3；
+4. 每个 PR 只对应一个 C 编号用例，避免过度设计。
 
 ---
 
-## 7. 变更记录
+## 8. 变更记录
 
 | 日期 | 变更 |
 |---|---|

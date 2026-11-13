@@ -13,6 +13,7 @@ Entries are written in English to match commit messages; the Chinese text in
 
 - `conformance/`: machine-readable cases for C0 (7), C1 (6), C2 (6), C3 (12), C4 (11), C5 (11), C6 (8), and C7 (7), plus `case.schema.json`, `suite.schema.json`, `report.schema.json`, and `README.md`.
 - `examples/context-handle.json`, `examples/blackboard.json`, and `examples/audit-chain.json`: context-fabric and audit-chain fixtures.
+- `impl/`: reference implementation for M2.1 — envelope validation, the error model, stream and message framing, handshake, idempotency, and monotonic-clock deadlines, plus a conformance adapter and 32 unit tests.
 - `tools/conformance_run.py`: loads and validates cases, applies JSON Pointer mutations, runs an implementation adapter, and emits text, JSON, or Markdown reports.
 - `docs/roadmap.md`: milestone plan from 0.1 to 0.2 (M0–M5, decision gates, risk register).
 - `SECURITY.md` / `SECURITY.en.md`: disclosure channel, timelines, security review triggers.
@@ -27,6 +28,7 @@ Entries are written in English to match commit messages; the Chinese text in
 - `CONTRIBUTING.md` / `CONTRIBUTING.en.md`: state that the Chinese text is the normative original and `*.en.md` files are parallel translations.
 - `schemas/envelope.schema.json`: require `session_id` when `task.mode` is `peer`, matching standard §8.4.
 - `tools/conformance_run.py`: JSON output is now validated against `report.schema.json`; CI runs the same check.
+- CI now runs the reference implementation unit tests and the conformance suite against `impl/adapter.py`.
 - `tools/conformance_run.py --stub`: now also checks case-ID coverage against `docs/conformance.md` and materialises every `input.ref`, `context`, and mutation, so a missing fixture or a bad JSON Pointer fails CI instead of being skipped.
 
 ### Planned
