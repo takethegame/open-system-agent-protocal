@@ -15,7 +15,10 @@ Entries are written in English to match commit messages; the Chinese text in
 - `examples/context-handle.json`, `examples/blackboard.json`, and `examples/audit-chain.json`: context-fabric and audit-chain fixtures.
 - `impl/`: reference implementation for M2.1 — envelope validation, the error model, stream and message framing, handshake, idempotency, and monotonic-clock deadlines.
 - `impl/osap/crypto.py`, `identity.py`, and `registry.py` (M2.2): Ed25519 manifest signatures, agent registration with reserved-namespace and public-key binding checks, capability-record indexing with TTL, and discovery candidates that carry a static `consent_hint` only.
-- `impl/tests/`: 62 unit tests covering framing, validation order, idempotency, deadlines, signatures, registration rejections, and registry freshness.
+- `impl/osap/capability.py` (M2.3): capability-token validation, the ten attenuation rules of §5.3, stateless audience/task/subject binding, revocation with cascade, and the L3/L4 consent prerequisite.
+- `impl/osap/consent.py` (M2.4): consent-receipt validation ordered as decision, expiry, scope binding, then action/resource subsets.
+- `impl/osap/registry.py`: `capability_descriptor()` and `risk_of()` so an envelope route can be resolved to the receiving agent and its declared risk class.
+- `impl/tests/`: 118 unit tests covering framing, validation order, idempotency, deadlines, signatures, registration rejections, registry freshness, attenuation per dimension, revocation cascade, binding, and receipt ordering.
 - `tools/conformance_run.py`: loads and validates cases, applies JSON Pointer mutations, runs an implementation adapter, and emits text, JSON, or Markdown reports.
 - `docs/roadmap.md`: milestone plan from 0.1 to 0.2 (M0–M5, decision gates, risk register).
 - `SECURITY.md` / `SECURITY.en.md`: disclosure channel, timelines, security review triggers.
@@ -31,6 +34,10 @@ Entries are written in English to match commit messages; the Chinese text in
 - `schemas/envelope.schema.json`: require `session_id` when `task.mode` is `peer`, matching standard §8.4.
 - `tools/conformance_run.py`: JSON output is now validated against `report.schema.json`; CI runs the same check.
 - CI now runs the reference implementation unit tests and the conformance suite against `impl/adapter.py`.
+
+### Changed
+
+- `conformance/cases/C3-authorization.json`: C3-04…C3-07 now name the pristine capability fixture as `context`, so the parent token is derived from it rather than from the mutated child. Expected outcomes and error codes are unchanged.
 - `tools/conformance_run.py --stub`: now also checks case-ID coverage against `docs/conformance.md` and materialises every `input.ref`, `context`, and mutation, so a missing fixture or a bad JSON Pointer fails CI instead of being skipped.
 
 ### Planned

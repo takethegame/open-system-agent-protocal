@@ -202,8 +202,9 @@ JSON 报告在 runner 内直接对照 `report.schema.json` 校验，CI 增加了
 - [x] M2.1a 信封 + 错误模型 + 两种分帧编解码（`impl/osap/`，C0 automated 5/5）
 - [ ] M2.1b 真实传输绑定（Linux UDS stream + 一种 message 绑定，含对端认证与回环 demo）
 - [x] M2.2 身份与握手 + 保留命名空间 + Ed25519 签名（`impl/osap/identity.py`、`crypto.py`、`registry.py`；C1 6/6、C2 5/5）
-- [ ] M2.3（6 天）能力模型：签发、衰减、绑定、撤销、`max_uses`、预算
-- [ ] M2.4（4 天）同意：风险分级、`consent.request`/`grant`/`deny`、回执与 `cap_id` 预约顺序
+- [x] M2.3 能力模型：衰减十项规则、绑定三项、撤销级联、风险前置（`impl/osap/capability.py`；C3-01…C3-08）
+- [x] M2.4a 同意回执校验：决策、过期、范围与顺序（`impl/osap/consent.py`；C3-09…C3-12）
+- [ ] M2.4b 同意消息流：`consent.request`/`grant`/`deny`、回执签发、`cap_id` 预约顺序
 - [ ] M2.5（6 天）任务：`request`/`result`、`delegate`、`handoff`、取消传播、budget
 - [ ] M2.6（3 天）审计哈希链 + 任务 trace
 - [ ] M2.7（3 天）演示：`notes-agent` + `calendar-agent` + `supervisor`，跑通“查找空档 → 征求同意 → 创建 tentative 事件”
