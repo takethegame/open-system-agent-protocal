@@ -207,7 +207,7 @@ JSON 报告在 runner 内直接对照 `report.schema.json` 校验，CI 增加了
 - [ ] M2.4b 同意消息流：`consent.request`/`grant`/`deny`、回执签发、`cap_id` 预约顺序
 - [x] M2.5a 任务模型：`request`/`result`、`delegate`、`handoff`、取消传播、预算（`impl/osap/task.py`；C4 automated 8/8）
 - [x] M2.5b 上下文织构：`ctx://` 句柄授权与 TTL、标签继承、出口策略、黑板、对象删除、缓存与存储声明（`impl/osap/context.py`；C5 11/11）
-- [ ] M2.5c 联邦适配器与命名空间映射
+- [x] M2.5c 联邦适配器与命名空间映射：Android/Apple/Windows、MCP、A2A、D-Bus 投影，外部信任归一（`impl/osap/federation.py`；C6 automated 7/7）
 - [ ] M2.6（3 天）审计哈希链 + 任务 trace
 - [ ] M2.7（3 天）演示：`notes-agent` + `calendar-agent` + `supervisor`，跑通“查找空档 → 征求同意 → 创建 tentative 事件”
 

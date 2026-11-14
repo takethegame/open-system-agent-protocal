@@ -14,7 +14,7 @@
 |---|---|---|---|
 | M0 仓库可信化 | ✅ 完成 | 7/7 | 2026-11-12 |
 | M1 可执行一致性 | ✅ 完成 | 68/68 用例（100%） | 2026-11-12 |
-| M2 参考实现 MVP | 🟡 进行中 | M2.1a + M2.2 + M2.3 + M2.4 + M2.5a + M2.5b 完成（6/8 子阶段） | — |
+| M2 参考实现 MVP | 🟡 进行中 | M2.1a + M2.2 + M2.3 + M2.4 + M2.5a + M2.5b + M2.5c 完成（7/8 子阶段） | — |
 | M3 形式化不变量 | ⬜ 未开始 | 0/4 定理 | — |
 | M4 标准打包 | ⬜ 未开始 | 0/4 产出 | — |
 | M5 生态与采用 | ⬜ 未开始 | — | — |
@@ -29,7 +29,7 @@
 | 一致性用例 | 68 / 68 |
 | 校验工具 | 4 |
 | Markdown 文件 | 21 |
-| 参考实现 | 15 个模块 + 适配器（2804 行）+ 202 个单元测试 |
+| 参考实现 | 16 个模块 + 适配器（2978 行）+ 228 个单元测试 |
 | 中英平行文档 | 8 对 |
 | CI 工作流 | 1（Python 3.11 / 3.12） |
 
@@ -60,6 +60,7 @@
 | `2e05890` | 2026-11-14 | **M2.5a**：任务树、委派预算、取消、结果、handoff（160 tests；累计 36 pass） |
 | `206008b` | 2026-11-14 | **M2.5b**：上下文织构、标签、出口、黑板、删除、缓存、存储声明（202 tests；累计 47 pass） |
 | `c2bca7d` | 2026-11-14 | M2.5b 加固：身份/OS/授权先于过期判定，避免向无权调用者泄漏 TTL 状态 |
+| `49cf486` | 2026-11-14 | **M2.5c**：联邦适配器、原生身份、命名空间、外部信任归一（228 tests；累计 54 pass） |
 
 ---
 
@@ -268,17 +269,18 @@ C2/C4/C6 复用 `manifest.json`、`discovery-result.json`、`capability-record.j
 | `impl/osap/consent.py` | 120 | 同意回执与能力范围校验 | §5.8 | M2.4 |
 | `impl/osap/task.py` | 425 | 任务树、预算、取消、结果、handoff | §8.2–§8.10 | M2.5a |
 | `impl/osap/context.py` | 289 | 句柄、标签、黑板、对象、缓存、存储声明 | §9.2–§9.10 | M2.5b |
-| `impl/adapter.py` | 614 | 一致性适配器 | — | M2.1a–M2.5b |
+| `impl/osap/federation.py` | 146 | 原生描述符投影、原生身份、命名空间、信任归一 | §6.4、§6.7、§6.8 | M2.5c |
+| `impl/adapter.py` | 628 | 一致性适配器 | — | M2.1a–M2.5c |
 
-`impl/tests/` 有 202 个单元测试，覆盖分帧往返与边界、校验顺序、幂等、时钟回拨、错误码默认值、签名与篡改、注册拒绝路径、注册表 TTL 与发现过滤、衰减的十项规则（逐维度）、撤销级联、绑定三项、回执的校验顺序、任务状态机、取消传播、委派预算与深度、结果契约、handoff 的五类拒绝路径，以及上下文句柄的授权/过期/标签/出口/黑板/删除/缓存/存储/记忆边界。
+`impl/tests/` 有 202 个单元测试，覆盖分帧往返与边界、校验顺序、幂等、时钟回拨、错误码默认值、签名与篡改、注册拒绝路径、注册表 TTL 与发现过滤、衰减的十项规则（逐维度）、撤销级联、绑定三项、回执的校验顺序、任务状态机、取消传播、委派预算与深度、结果契约、handoff 的五类拒绝路径，上下文句柄的授权/过期/标签/出口/黑板/删除/缓存/存储/记忆边界，以及联邦投影的 MCP/A2A/D-Bus/OpenAPI 身份解析、外部信任归一与命名空间映射。
 
 ### 5.2 验证证据
 
 ```
 python3 -m unittest discover -s impl/tests -t impl
-    → Ran 202 tests ... OK
+    → Ran 228 tests ... OK
 python3 tools/conformance_run.py --impl impl/adapter.py
-    → 68 cases [C0..C7]: 47 pass, 0 fail, 21 skip
+    → 68 cases [C0..C7]: 54 pass, 0 fail, 14 skip
 ```
 
 | 等级 | 结果 | 覆盖点 |
@@ -289,6 +291,7 @@ python3 tools/conformance_run.py --impl impl/adapter.py
 | C3 | 12 pass | audience/task/subject 绑定、四项衰减、撤销级联、L3 无回执、回执过期与范围不足 |
 | C4 | 8 pass / 3 manual skip | 委派预算、结果契约、peer 会话、他人能力、handoff 重同意、运行期预算、所有权、拒绝 handoff |
 | C5 | 11 pass | 解析授权、过期不续期、标签继承、出口同意、黑板清理、引用检查、缓存钳制、存储职责、OS 权限、记忆边界 |
+| C6 | 7 pass / 1 manual skip | 三家原生注册表、MCP server/tool、A2A card/skill、D-Bus 四段、外部信任归一 |
 
 C3 的 12 条不仅错误码匹配，`details.violations` 也被断言为只含目标维度：
 
@@ -328,6 +331,18 @@ C5 的 11 条同样逐条核对：
 | C5-10 | 记忆句柄只有 `task.read`，缺 `memory.read`，`required_action=memory.read` |
 | C5-11 | 幂等索引、审计日志、任务树三项都被列为禁止晋升 |
 
+C6 的 7 条 automated 都命中投影字段：
+
+| 用例 | 投影结果 |
+|---|---|
+| C6-01 | Android AppFunction 保留 `android.appfunctions` 与 `com.example.calendar.createEvent` |
+| C6-02 | Apple App Intent 保留 `apple.app_intents` 与 `CreateEventIntent` |
+| C6-03 | Windows App Action 保留 `windows.app_actions` 与 `CreateEventAction` |
+| C6-04 | MCP 拆出 `server=calendar-server`、`tool=create_event`，保留 `osap.calendar.event/v1` |
+| C6-05 | A2A 从 `#` 恢复 Agent Card 与 `skill=create_event` |
+| C6-06 | D-Bus 恢复 `bus=session`、`path=/org/example/Calendar`、`interface=org.example.Calendar`、`method=CreateEvent` |
+| C6-07 | 外部 MCP 的 `system` 声明被降为 `unverified`，`origin=external` |
+
 C1-05 与 C2-03 是 `observe`：前者规范允许“拒绝或宽限期接受”，实现选择拒绝；后者报告实际观察到的字段。
 
 ### 5.3 设计决定
@@ -353,6 +368,9 @@ C1-05 与 C2-03 是 `observe`：前者规范允许“拒绝或宽限期接受”
 | 取消跳过整棵 detached 子树 | §8.7 允许 detached 子任务继续，且必须失去父能力，父链取消不应再影响它 |
 | C5 的“现在”取句柄 `created_at` | 不应让夹具随墙钟失效；C5-02 的过期变异必须稳定能触发 |
 | 身份、OS 权限与授权先于过期判定 | 无权限的调用者不应学到句柄是否过期；C5-02 的 audience 匹配，仍会正确报 `CONTEXT_EXPIRED` |
+| D-Bus 原生身份按内容解析 | 冒号可能出现在各段；取首段为 bus、`/` 开头段为 path、剩余段为 interface，尾段剥离 `interface.` 得 method |
+| 外部协议信任只降不升 | §6.4 要求外部内容最低信任；未验签时 `verified` 与 `system` 都降为 `unverified` |
+| 联邦投影只读 | 不改写原生注册表，也不改写传入字典；TTL 刷新由 `refresh()` 提供新窗口 |
 | 记忆句柄按 `ctx://user/memory` 前缀识别 | §9.3 未定义记忆 wire format；普通 `ctx://` 的 `scope=user` 仍只需 `resolve` |
 | 标签违规返回 `observe` 而非拒绝 | C5-03 的预期是 `observe`；拒绝派生与抬高标签都合规，真正阻止泄露的是出口策略 |
 | 被引用对象的硬删判为不合约 | §9.6 用 SHOULD 描述墓碑；实现区分软删（墓碑）与硬删（拒绝），并总是写审计 |
@@ -374,6 +392,8 @@ C1-05 与 C2-03 是 `observe`：前者规范允许“拒绝或宽限期接受”
 | 记忆句柄识别 | §9.3 未定义记忆 wire format | 按 `ctx://user/memory` 前缀识别，要求 `memory.read` |
 | 标签违规处理 | §9.4 未规定拒绝还是记录 | 解析后报告 `lowered`/`effective_label`，对应 C5-03 的 `observe` |
 | 对象硬删被引用对象 | §9.6 用 SHOULD 描述墓碑 | 判为不合约；软删返回墓碑并写审计 |
+| 原生 `native_id` 格式 | §6.7 是建议映射，schema 只要求非空 | 解析失败报 `SCHEMA_INVALID`，不静默投影为空字段 |
+| 外部协议信任等级 | §6.4 未规定验签失败时的具体等级 | 一律 `unverified`；只有可验证的本地来源保留 `system` |
 
 ### 5.5 已知限制
 
@@ -386,7 +406,8 @@ C1-05 与 C2-03 是 `observe`：前者规范允许“拒绝或宽限期接受”
 7. 任务树只在内存，重启即丢；§8.11 的 `effect.intent`、对账与恢复未实现，C4-08/C4-09 仍是 manual。
 8. 上下文审计与黑板状态只在内存，没有真正撤销句柄；§9.7 的“谁在何时解析了哪个句柄”只能读进程内列表。
 9. 没有真实对象存储：`delete_object` 只返回判定，不触碰文件系统；`storage_declaration` 只核对声明，不实现配额、GC 或加密。
-10. 47 个 pass 只证明信封、分帧、身份、注册表、授权、任务主路径与上下文主路径；不证明联邦或审计哈希链。
+10. 联邦只做投影：没有监听原生注册表变化，也没有按 TTL 自动刷新，C6-08 仍是 manual；MCP/A2A/OpenAPI 的签名未验证。
+11. 54 个 pass 只证明信封、分帧、身份、注册表、授权、任务、上下文与联邦投影；不证明审计哈希链与任务 trace。
 
 ### 5.6 M2 剩余工作
 
@@ -397,7 +418,7 @@ C1-05 与 C2-03 是 `observe`：前者规范允许“拒绝或宽限期接受”
 - [ ] **M2.4b**（后续）：`consent.request` / `grant` / `deny` 的消息流、回执签发、`cap_id` 预约顺序；当前只实现回执的校验侧；
 - [x] **M2.5a**：任务树、委派、预算、取消、结果、handoff（C4 automated 8/8）；
 - [x] **M2.5b**：上下文织构（C5 11/11）；
-- [ ] **M2.5c**：联邦适配器（C6 8 条）；
+- [x] **M2.5c**：联邦适配器（C6 automated 7/7）；
 - [ ] **M2.6**：审计哈希链与任务 trace（C7 7 条）；
 - [ ] **M2.7**：三 Agent 演示。
 
@@ -421,10 +442,10 @@ C1-05 与 C2-03 是 `observe`：前者规范允许“拒绝或宽限期接受”
 
 ## 7. 下一步（按顺序）
 
-1. **M2.5c**：联邦适配器与命名空间映射，跑通 C6 的 8 条；
-2. **M2.6**：审计哈希链与任务 trace，让撤销、取消与 handoff 事件真正落账；
+1. **M2.6**：审计哈希链与任务 trace，让撤销、取消与 handoff 事件真正落账，跑通 C7 的 7 条；
+2. **M2.7**：三 Agent 本地演示，串起注册、发现、能力、任务、上下文与审计；
 3. **M2.4b**：同意消息流（`consent.request` / `grant` / `deny`）与回执签发；
-4. **M2.1b**：真实传输绑定（可与 M2.5c 并行）；
+4. **M2.1b**：真实传输绑定（可与 M2.6 并行）；
 5. 每个 PR 只对应一个 C 编号用例，避免过度设计。
 
 ---
@@ -440,3 +461,4 @@ C1-05 与 C2-03 是 `observe`：前者规范允许“拒绝或宽限期接受”
 | 2026-11-12 | M1 扩展到 61/68（C5 11 条）；新增 `context-handle.json` 与 `blackboard.json`；登记夹具无 schema 的限制 |
 | 2026-11-12 | **M1 完成**：68/68；新增 C7 与 `audit-chain.json`；JSON 报告纳入 schema 校验 |
 | 2026-11-14 | **M2.5b**（`206008b`）：上下文织构（句柄授权、TTL、标签、出口、黑板、删除、缓存、存储声明、记忆边界）；C5 11/11，累计 47 pass |
+| 2026-11-14 | **M2.5c**（`49cf486`）：联邦适配器（原生身份、命名空间、外部信任归一）；C6 automated 7/7，累计 54 pass |
