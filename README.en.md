@@ -6,7 +6,7 @@
 
 > **A local-first open standard: cross-application agent peer-to-peer collaboration, capability registry federation, and task-level authorization.**
 >
-> Version: 0.1 Draft · 2026-11-10 · Status: discussion draft, no reference implementation yet
+> Version: 0.1 Draft · 2026-11-10 · Status: discussion draft, reference implementation through M2.6 with a three-agent demo
 
 ---
 
@@ -106,6 +106,7 @@ python3 tools/check_schemas.py     # schema meta-validation and $id uniqueness
 python3 tools/validate_examples.py # examples and cross-document checks
 python3 tools/check_docs.py        # JSON blocks, links, zh/en parity
 python3 tools/conformance_run.py --stub  # conformance case format
+python3 demo/run_demo.py           # three-agent end-to-end demo
 ```
 
 All three run in CI; dependencies are in `requirements.txt` (Python 3.9+).
@@ -117,7 +118,7 @@ All three run in CI; dependencies are in `requirements.txt` (Python 3.9+).
 - **Specification**: 0.1 discussion draft; core mechanisms are defined; open questions are in Section 15 of the specification.
 - **Trust boundary**: the Bus Core is the minimal TCB; RFS/CA/PCS/CF/AL are independent services. The 0.1 Bus can read payloads, which is an explicit trust assumption; a P1 encrypted profile that does not trust the Bus is planned for 0.2.
 - **State semantics**: task trees, idempotency indexes, revocation lists, and audit chain heads must be persisted and support crash recovery. Bus state is not memory: long-term semantic memory is held by agents or a separate memory service and must be authorized separately (see [`docs/standard.md`](docs/standard.en.md) §3.7, §9.3).
-- **Implementation**: no reference implementation yet.
+- **Implementation**: a Python reference implementation lives in `impl/`, covers M2.1–M2.6, and passes all 60 automated conformance cases; `demo/` provides a three-agent end-to-end demo.
 - **Conformance**: C0–C7 levels are defined, and test cases are listed.
 - **Standards home**: undetermined; recommended to align as a local profile with IETF `agentproto`-related discussions, OAuth WIMSE, and the AAIF/LF ecosystem (whether a working group is formed is subject to the IETF's official position).
 - **License**: Apache-2.0 (uniform across specification, schemas, examples, and tools); contributions use DCO 1.1.

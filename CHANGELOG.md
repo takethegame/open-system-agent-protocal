@@ -23,6 +23,7 @@ Entries are written in English to match commit messages; the Chinese text in
 - `impl/osap/federation.py` (M2.5c): read-only projection of Android/Apple/Windows, MCP, A2A, D-Bus, and OpenAPI descriptors into capability records, preserving native identity, mapping namespaces deterministically, and capping external trust at `unverified`.
 - `impl/osap/audit.py` (M2.6): audit-chain verification with schema, trace, and hash-linkage checks; salted-commitment redacted export; idempotent replay; intent-only recovery marked `unknown`; cross-user authorization; and the 0.1 compromised-Bus declaration.
 - `impl/tests/`: 265 unit tests covering framing, validation order, idempotency, deadlines, signatures, registration rejections, registry freshness, attenuation per dimension, revocation cascade, binding, receipt ordering, task state transitions, cancellation, delegation budgets, result contracts, handoff rejections, the context fabric's grant, expiry, label, egress, blackboard, delete, cache, storage, and memory rules, federated native-identity projection with external-trust normalization, and audit-chain verification, redaction, replay, recovery, and cross-user rules.
+- `demo/run_demo.py` and `demo/README.md` (M2.7): a three-agent end-to-end demo that registers signed manifests, discovers a capability record, validates an L3 consent receipt, delegates to notes and calendar across two boundaries, resolves a memory context handle, and verifies plus redacts a 15-event audit chain with asserted trace completeness and side-effect-free recovery.
 - `tools/conformance_run.py`: loads and validates cases, applies JSON Pointer mutations, runs an implementation adapter, and emits text, JSON, or Markdown reports.
 - `docs/roadmap.md`: milestone plan from 0.1 to 0.2 (M0–M5, decision gates, risk register).
 - `SECURITY.md` / `SECURITY.en.md`: disclosure channel, timelines, security review triggers.
@@ -43,10 +44,13 @@ Entries are written in English to match commit messages; the Chinese text in
 
 - `conformance/cases/C3-authorization.json`: C3-04…C3-07 now name the pristine capability fixture as `context`, so the parent token is derived from it rather than from the mutated child. Expected outcomes and error codes are unchanged.
 - `tools/conformance_run.py --stub`: now also checks case-ID coverage against `docs/conformance.md` and materialises every `input.ref`, `context`, and mutation, so a missing fixture or a bad JSON Pointer fails CI instead of being skipped.
+- CI now runs `python3 demo/run_demo.py` after the unit tests and the conformance suite.
 
 ### Planned
 
-- M2: reference implementation for the C0–C3 envelope, identity, registry, and authorization paths.
+- M2.1b: real transport bindings (UDS stream plus one message binding) and peer authentication.
+- M2.4b: the `consent.request` / `grant` / `deny` message flow and receipt issuance.
+- Persistent indexes and audit storage to replace the in-memory state.
 
 ## [0.1.0] - 2026-11-10
 

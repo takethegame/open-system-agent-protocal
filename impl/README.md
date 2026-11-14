@@ -1,6 +1,6 @@
-# 参考实现（M2.1 – M2.5）
+# 参考实现（M2.1 – M2.6）
 
-本目录是 OSAP 0.1 的最小参考实现。已完成路线图的 **M2.1a（信封 + 分帧 + 错误模型）**、**M2.2（身份 + 签名 + 注册表）**、**M2.3（能力模型）**、**M2.4（同意回执）**、**M2.5a（任务模型）**、**M2.5b（上下文织构）**、**M2.5c（联邦适配器）** 与 **M2.6（审计链）**。
+本目录是 OSAP 0.1 的最小参考实现。已完成路线图的 **M2.1a（信封 + 分帧 + 错误模型）**、**M2.2（身份 + 签名 + 注册表）**、**M2.3（能力模型）**、**M2.4（同意回执）**、**M2.5a（任务模型）**、**M2.5b（上下文织构）**、**M2.5c（联邦适配器）** 与 **M2.6（审计链）**；端到端串接见 [`../demo/`](../demo/README.md)。
 
 规范性内容以 [`../docs/standard.md`](../docs/standard.md) 为准；本目录只回答“这段文字如何落成代码”。
 
@@ -54,7 +54,7 @@
 | 跨用户 | §11.2 | 默认拒绝；显式开启且双方同意才放行 |
 | 被攻破的 Bus | §3.6、§11.1 | 0.1 不声称 P0 防护；声明了即判不合约 |
 
-**不在本阶段**：真实 OS 传输绑定（M2.1b）与三 Agent 演示（M2.7）。未实现的类型会抛 `NotImplementedError`，一致性运行器据此记为 `skip`。
+**不在本阶段**：真实 OS 传输绑定（M2.1b）与同意消息流（M2.4b）。未实现的类型会抛 `NotImplementedError`，一致性运行器据此记为 `skip`。
 
 ## 2. 目录
 
@@ -93,6 +93,9 @@ python3 tools/conformance_run.py --impl impl/adapter.py --level C0,C1,C2,C3,C4,C
 
 # 全量：已实现的出 pass，其余按里程碑 skip
 python3 tools/conformance_run.py --impl impl/adapter.py --format md --out report.md
+
+# 三 Agent 端到端演示（注册 → 发现 → 同意 → 委派 → 上下文 → 审计）
+python3 demo/run_demo.py
 ```
 
 ## 4. 当前一致性结果
@@ -124,6 +127,8 @@ C5 的 5 条拒绝/接受和 6 条观察也都核对过实际原因：C5-01 只�
 C6 的 7 条 automated 全部命中投影字段：C6-01/02/03 保留三家的 `native_id` 与 `system` 信任；C6-04 把 `calendar-server:create_event` 拆成 server/tool 并保留 `osap.calendar.event/v1`；C6-05 从 `#` 恢复 Agent Card 与 skill；C6-06 从四段式 D-Bus 名称恢复 bus/path/interface/method；C6-07 把外部 MCP 的 `system` 声明归一为 `unverified`，并标 `origin=external`。
 
 C7 的 6 条 automated 同样逐条核对：C7-02 在 `events[1].prev_hash` 被改后于索引 1 断开并报 `AUDIT_CHAIN_INVALID`；C7-03 保留 hash/prev_hash、替换敏感字段后仍验证通过；C7-04 跨用户默认拒绝；C7-05 两次回放只有 1 次副作用；C7-06 只有 intent 时标 `unknown` 并告警；C7-07 声明 P0 防护被判不合约。
+
+`python3 demo/run_demo.py` 把上述模块串成一条可复核路径：三个 Agent 注册、一次发现、一份 L3 回执、两次委派（supervisor → notes、supervisor → calendar）、一次上下文解析与 15 条审计事件。它用断言固定 C7-01 中可自动化的部分（单 trace、每跳 `causation_id`、链验证、脱敏后仍可验证、恢复不执行副作用），细节见 [`../demo/README.md`](../demo/README.md)。
 
 ## 5. 设计决定
 

@@ -29,9 +29,10 @@
 | 校验工具 | `tools/validate_examples.py`，输出 `OK: 24 checks passed` |
 | 文档 | 7 组中英文平行版本 |
 | 许可 | Apache-2.0 + DCO 1.1 |
-| 参考实现 | **0** |
-| CI | **0** |
-| `CHANGELOG` / `SECURITY` / `.gitignore` | **均缺失** |
+| 参考实现 | 17 个模块 + 适配器；C0–C7 automated 60/60 |
+| 端到端演示 | `demo/run_demo.py`（notes + calendar + supervisor） |
+| CI | 1 个工作流（Python 3.11 / 3.12） |
+| `CHANGELOG` / `SECURITY` / `.gitignore` | 已补齐（M0） |
 
 ### 1.2 关键缺口
 
@@ -44,6 +45,8 @@
 | 规范是 umbrella 文档 | 无法直接提交 IETF | M4 |
 | 仓库名拼写错误 | 对外发布不专业 | M0 |
 
+截至 2026-11-14：M0、M1 已完成；M2 的 C0–C7 automated 用例全部通过，`M2.1b`（真实传输）与 `M2.4b`（同意消息流）仍开放。上表保留规划时的口径，作为历史对照。
+
 ---
 
 ## 2. 里程碑总览
@@ -52,7 +55,7 @@
 |---|---|---|---|---|---|
 | **M0** 仓库可信化 | 让外部人能一键验证 | CI、`.gitignore`、`CHANGELOG`、`SECURITY`、改名 | CI 在干净 checkout 上全绿 | 2 天 | 2026-11-14 |
 | **M1** 可执行一致性 | 68 个用例变成机器可读 | `conformance/cases/`、runner、报告格式 | 68/68 用例可加载，报告通过 schema 校验 | 4 天 | 2026-11-20 |
-| **M2** 参考实现 MVP | 跑通 C0–C3 + C4 主路径 | `impl/` 最小实现、2 App + 1 Agent 演示 | C0–C3 全绿，C4 主路径通过 | 4 周 | 2026-12-18 |
+| **M2** 参考实现 MVP | 跑通 C0–C3 + C4 主路径 | `impl/` 最小实现、3 App 演示（notes + calendar + supervisor） | C0–C3 全绿，C4 主路径通过 | 4 周 | 2026-12-18 |
 | **M3** 形式化不变量 | 证明权威单调性 | TLA+ 或 Alloy 模型 + 4 条定理 | 模型检查无违例 | 2 周 | 2026-12-31 |
 | **M4** 标准打包 | 拆成可提交材料 | 2 个 IETF draft + Linux binding + ADR | 草案可独立阅读、无悬空引用 | 3 周 | 2027-01-30 |
 | **M5** 生态与采用 | 拿到外部实现与评审 | 一致性登记、外部实现、安全审计 | ≥1 个非本项目实现通过 C2 | 持续 | 2027-Q1 起 |
@@ -209,7 +212,7 @@ JSON 报告在 runner 内直接对照 `report.schema.json` 校验，CI 增加了
 - [x] M2.5b 上下文织构：`ctx://` 句柄授权与 TTL、标签继承、出口策略、黑板、对象删除、缓存与存储声明（`impl/osap/context.py`；C5 11/11）
 - [x] M2.5c 联邦适配器与命名空间映射：Android/Apple/Windows、MCP、A2A、D-Bus 投影，外部信任归一（`impl/osap/federation.py`；C6 automated 7/7）
 - [x] M2.6 审计链与任务 trace：链验证、脱敏承诺导出、回放幂等、恢复对账、跨用户边界（`impl/osap/audit.py`；C7 automated 6/6）
-- [ ] M2.7（3 天）演示：`notes-agent` + `calendar-agent` + `supervisor`，跑通“查找空档 → 征求同意 → 创建 tentative 事件”
+- [x] M2.7 演示：`notes-agent` + `calendar-agent` + `supervisor`，两条委派边界、15 条审计事件、脱敏导出与恢复断言（`demo/run_demo.py`）
 
 **退出标准**
 
