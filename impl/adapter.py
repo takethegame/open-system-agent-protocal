@@ -12,6 +12,7 @@ M2.3 adds capability tokens, attenuation, binding, and revocation.
 M2.4 adds consent receipts and their linkage to capabilities.
 M2.5 adds the task tree: delegation, budgets, cancellation, results, handoff.
 M2.5b adds the context fabric: handles, labels, blackboard, objects, storage.
+M2.5c adds federation adapters: native descriptors to capability records.
 Cases outside the implemented scope return `skip` with the milestone that
 will pick them up, so a partial implementation reports honestly.
 """
@@ -33,6 +34,7 @@ from osap import (  # noqa: E402
     consent,
     context,
     crypto,
+    federation,
     envelope,
     framing,
     identity,
@@ -42,7 +44,6 @@ from osap import (  # noqa: E402
 from osap.clock import parse_timestamp  # noqa: E402
 
 MILESTONES = {
-    "C6": "M2.5 federation adapters",
     "C7": "M2.6 audit chain",
 }
 
@@ -147,6 +148,7 @@ def conformance_check(case: dict, documents: dict) -> dict:
         "C3": _check_c3,
         "C4": _check_c4,
         "C5": _check_c5,
+        "C6": _check_c6,
     }.get(level)
     if handler is None:
         return {
@@ -612,3 +614,15 @@ def _check_c5_declare(params: dict) -> dict:
     }
     report = context.storage_declaration(params.get("cf_mode", "os_native"), declares)
     return {"outcome": "observe", "state": report}
+
+
+# --- C6 federation ----------------------------------------------------------
+
+
+def _check_c6(case: dict, documents: dict) -> dict:
+    operation = case.get("operation")
+    primary = documents.get("primary")
+
+    if operation == "index":
+        return {"outcome": "accept", "state": federation.project(primary)}
+    return {"outcome": "skip", "reason": f"C6 operation {operation!r} has no automated check"}

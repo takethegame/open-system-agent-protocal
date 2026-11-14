@@ -11,10 +11,21 @@ Covered so far:
 - M2.3: capability tokens, attenuation, binding, revocation (§5.1-§5.6);
 - M2.4: consent receipts and capability linkage (§5.8);
 - M2.5: task tree, budgets, cancellation, results, handoff (§8); context
-  fabric handles, labels, blackboard, objects (§9).
+  fabric handles, labels, blackboard, objects (§9); federation adapters
+  projecting native descriptors into capability records (§6.7, §6.8).
 """
 
-from . import capability, consent, context, crypto, identity, registry, schema, task
+from . import (
+    capability,
+    consent,
+    context,
+    crypto,
+    federation,
+    identity,
+    registry,
+    schema,
+    task,
+)
 from .bus import Bus
 from .clock import Deadline
 from .envelope import KNOWN_TYPES, SUPPORTED_MAJOR, validate
@@ -36,6 +47,7 @@ __all__ = [
     "consent",
     "context",
     "crypto",
+    "federation",
     "identity",
     "registry",
     "schema",

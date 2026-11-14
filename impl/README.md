@@ -1,6 +1,6 @@
 # 参考实现（M2.1 – M2.5）
 
-本目录是 OSAP 0.1 的最小参考实现。已完成路线图的 **M2.1a（信封 + 分帧 + 错误模型）**、**M2.2（身份 + 签名 + 注册表）**、**M2.3（能力模型）**、**M2.4（同意回执）**、**M2.5a（任务模型）** 与 **M2.5b（上下文织构）**。
+本目录是 OSAP 0.1 的最小参考实现。已完成路线图的 **M2.1a（信封 + 分帧 + 错误模型）**、**M2.2（身份 + 签名 + 注册表）**、**M2.3（能力模型）**、**M2.4（同意回执）**、**M2.5a（任务模型）**、**M2.5b（上下文织构）** 与 **M2.5c（联邦适配器）**。
 
 规范性内容以 [`../docs/standard.md`](../docs/standard.md) 为准；本目录只回答“这段文字如何落成代码”。
 
@@ -43,8 +43,12 @@
 | 数据出口 | §9.8 | `sensitive`/`secret` 离开设备需要用户显式放行 |
 | OS 权限 | §9.9 | OS 拒绝是外层边界，句柄不能绕过沙箱 |
 | 存储声明 | §9.10 | `managed_store` 必须覆盖配额、GC、崩溃恢复、加密、路径安全、删除 |
+| 联邦投影 | §6.7 | 原生描述符投影为能力记录；保留 `source`、`native_id`、`version`、`provenance` |
+| 原生身份 | §6.7 | MCP server/tool、A2A card/skill、D-Bus bus/path/interface/method、OpenAPI operationId |
+| 命名空间映射 | §6.8 | 由 `registry + native_id` 生成确定性的 `cap://federation/...` 名称 |
+| 外部信任 | §6.4 | 外部协议内容标 `origin=external`；未验签时不得保持 `system`，归一为 `unverified` |
 
-**不在本阶段**：联邦适配器（M2.5c）、审计链（M2.6）、真实 OS 传输绑定（M2.1b）。未实现的类型会抛 `NotImplementedError`，一致性运行器据此记为 `skip`。
+**不在本阶段**：审计链（M2.6）、真实 OS 传输绑定（M2.1b）。未实现的类型会抛 `NotImplementedError`，一致性运行器据此记为 `skip`。
 
 ## 2. 目录
 
@@ -61,6 +65,7 @@ impl/
     crypto.py           Ed25519 签名与规范化 JSON
     envelope.py         §7.1 校验（版本 → 类型 → schema）
     errors.py           §7.7 错误码与 OsapError
+    federation.py       §6.7、§6.8 原生描述符投影与命名空间映射
     framing.py          §7.9 两种分帧绑定
     identity.py         注册、保留命名空间、App/公钥绑定
     idempotency.py      §7.8 幂等索引
@@ -77,7 +82,7 @@ impl/
 python3 -m unittest discover -s impl/tests -t impl
 
 # 只跑已实现的范围
-python3 tools/conformance_run.py --impl impl/adapter.py --level C0,C1,C2,C3,C4,C5
+python3 tools/conformance_run.py --impl impl/adapter.py --level C0,C1,C2,C3,C4,C5,C6
 
 # 全量：已实现的出 pass，其余按里程碑 skip
 python3 tools/conformance_run.py --impl impl/adapter.py --format md --out report.md
@@ -87,7 +92,7 @@ python3 tools/conformance_run.py --impl impl/adapter.py --format md --out report
 
 ```
 python3 tools/conformance_run.py --impl impl/adapter.py
-→ 68 cases [C0..C7]: 47 pass, 0 fail, 21 skip
+→ 68 cases [C0..C7]: 54 pass, 0 fail, 14 skip
 ```
 
 | 等级 | 结果 | 说明 |
@@ -98,14 +103,17 @@ python3 tools/conformance_run.py --impl impl/adapter.py
 | C3 | 12 pass | 绑定、衰减、撤销、风险与回执 |
 | C4 | 8 pass / 3 manual skip | 委派预算、结果契约、peer 会话、所有权、handoff |
 | C5 | 11 pass | 解析授权、过期、标签继承、出口、黑板、删除、缓存、存储声明、记忆边界 |
+| C6 | 7 pass / 1 manual skip | 三家原生注册表、MCP、A2A、D-Bus 投影与外部信任归一 |
 
-C6–C7 共 15 条由适配器显式 `skip`，报告里写明归属里程碑。剩余 6 条 skip 是 manual 用例（C0-01、C0-06、C2-05、C4-01、C4-08、C4-09）。
+C7 的 7 条由适配器显式 `skip`，报告里写明归属里程碑。剩余 7 条 skip 是 manual 用例（C0-01、C0-06、C2-05、C4-01、C4-08、C4-09、C6-08）。
 
 C3 的 12 条都命中预期错误码，且实现被断言为“只在目标维度上失败”：C3-04…C3-07 的 `details.violations` 分别只有 `actions`、`resources`、`exp`、`depth`+`constraints.max_depth`。
 
 C4 的 8 条同样逐条核对过拒绝原因：C4-02 是 `wall_ms` 超出父剩余 8000、C4-03 是 `result_schema` 不符、C4-04 是缺 `session_id`、C4-05 是 `subject` 不是发送方、C4-06 是 L3 handoff 无新回执、C4-07 是 `wall_ms` 已用 6000 > 预算 5000、C4-10 是 owner 已变为 calendar。
 
 C5 的 5 条拒绝/接受和 6 条观察也都核对过实际原因：C5-01 只给了 `read` 缺 `resolve`、C5-02 过期早于夹具“现在”、C5-04 `secret` 出口无放行、C5-05 黑板归档且不晋升、C5-07 缓存 900 s 被钳到 600 s、C5-09 OS 权限先于任何授权、C5-10 只有 `task.read` 缺 `memory.read`；C5-03/06/08/11 的 `observe` 报告分别给出标签继承、引用检查与审计、缺失的存储职责、被禁止晋升的来源。
+
+C6 的 7 条 automated 全部命中投影字段：C6-01/02/03 保留三家的 `native_id` 与 `system` 信任；C6-04 把 `calendar-server:create_event` 拆成 server/tool 并保留 `osap.calendar.event/v1`；C6-05 从 `#` 恢复 Agent Card 与 skill；C6-06 从四段式 D-Bus 名称恢复 bus/path/interface/method；C6-07 把外部 MCP 的 `system` 声明归一为 `unverified`，并标 `origin=external`。
 
 ## 5. 设计决定
 
@@ -191,6 +199,18 @@ C5 没有信封，也没有统一的 `ts`。适配器用 `context-handle.json` �
 
 §9.6 说被引用对象“SHOULD 延迟删除或标记墓碑”，§9.7 要求删除触发引用清理与审计。实现把“引用数 > 0 且 `hard_delete=true`”判为不合约（`deleted=false`、`tombstoned=false`），软删除则返回 `tombstoned=true`；两种情况都写 `audit_written=true`，因为 C5-06 断言的是“有引用检查与审计事件”，不是“真的删掉了”。
 
+### 5.20 原生身份按内容解析，不按固定位置
+
+D-Bus 的 `native_id` 同时含 bus、interface、path 与 interface.method，冒号又可能出现在各段里。实现先取首段为 bus、取以 `/` 开头的段为 path，再取剩余段中的 interface，最后从尾段剥离 `interface.` 得到 method。这样 C6-06 的 `session:org.example.Calendar:/org/example/Calendar:org.example.Calendar.CreateEvent` 能稳定还原为 bus=`session`、path=`/org/example/Calendar`、interface=`org.example.Calendar`、method=`CreateEvent`。
+
+### 5.21 外部协议的信任只能降不能升
+
+§6.4 要求外部内容默认最低信任，RFS 不得把未验证来源提升为 `system`。实现把 MCP、A2A、OpenAPI、`bridge` 视为外部：即使记录自称 `system`，投影也只报 `unverified`。这一层没有验签器，`verified` 同样降到 `unverified`，宁可保守也不伪造信任。
+
+### 5.22 投影是只读的
+
+`federation.project` 只读取并校验能力记录，不写入原生注册表，也不改写传入的字典；C6-08 的“原生变化后更新或失效”由 `refresh()` 提供新的 freshness 窗口，真正的监听与调度留给 Bus 的注册表缓存（§6.10）。
+
 ## 6. 已知限制
 
 1. **内存态**：幂等索引、注册表、轮换状态都在进程内，重启即丢；§7.8 要求可重建的持久索引，留给 M2.6。
@@ -204,7 +224,8 @@ C5 没有信封，也没有统一的 `ts`。适配器用 `context-handle.json` �
 9. **委派未校验能力链**：`delegate` 只检查任务预算与深度，没有把 `delegated_capability` 与父能力凭证做完整衰减比对（夹具里没有父凭证）。
 10. **上下文只在内存**：`ContextFabric` 的审计与黑板状态不持久化，也没有真正撤销句柄；§9.7 的“谁在何时解析了哪个句柄”目前只能读进程内列表。
 11. **没有真实对象存储**：`delete_object` 只返回判定结果，不触碰文件系统；`storage_declaration` 只核对声明，不实现配额、GC 或加密。
-12. **联邦、审计仍缺席**：C6–C7 全部 `skip`，因此 47 个 pass 不证明联邦适配或审计哈希链。
+12. **联邦只做投影**：没有监听原生注册表变化，也没有按 TTL 自动刷新；C6-08 仍是 manual。MCP/A2A/OpenAPI 的外部签名未验证，因此统一降为 `unverified`。
+13. **审计仍缺席**：C7 全部 `skip`，因此 54 个 pass 不证明审计哈希链与任务 trace。
 
 ## 7. 与规范的偏差登记
 
@@ -221,6 +242,8 @@ C5 没有信封，也没有统一的 `ts`。适配器用 `context-handle.json` �
 | 记忆句柄的识别 | §9.3 未定义记忆 wire format | 按 `ctx://user/memory` 前缀识别，要求 `memory.read` |
 | 标签违规的处理 | §9.4 未规定拒绝还是记录 | 解析成功后报告 `lowered`/`effective_label`，对应 C5-03 的 `observe` |
 | 被引用对象的删除 | §9.6 用 SHOULD 描述墓碑 | 软删除墓碑化；硬删被引用对象判为不合约 |
+| 原生 `native_id` 的格式 | §6.7 给的是建议映射，schema 只要求非空字符串 | 解析失败报 `SCHEMA_INVALID`，不静默投影成空字段 |
+| 外部协议信任 | §6.4 要求最低信任，但未规定验签失败时的具体等级 | 一律降为 `unverified`；只有本实现能验证的本地来源才保留 `system` |
 | 任务状态机的非法转换 | 规范未规定错误码 | 用 `POLICY_DENIED` 并附带 `from`/`to` |
 | 结果状态转换 | §8.8 未规定“结果消息自带 `task.status` 时如何校验” | 先校验结果契约，再走 §8.10 状态机；因此对从未启动的任务返回结果会被拒绝 |
 | 委派的能力链 | §8.5 要求子能力满足全部衰减条件 | 任务侧只校验预算与深度；能力侧需要父凭证，未在夹具中提供 |
