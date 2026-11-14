@@ -53,3 +53,6 @@ jobs:
 
       - name: Run conformance against the reference implementation
         run: python tools/conformance_run.py --impl impl/adapter.py
+
+      - name: Run the three-agent demo
+        run: python demo/run_demo.py
