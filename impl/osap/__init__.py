@@ -9,10 +9,11 @@ Covered so far:
 - M2.2: Ed25519 manifest signatures, agent registration, reserved namespaces,
   and the registry subset (§4, §6);
 - M2.3: capability tokens, attenuation, binding, revocation (§5.1-§5.6);
-- M2.4: consent receipts and capability linkage (§5.8).
+- M2.4: consent receipts and capability linkage (§5.8);
+- M2.5: task tree, budgets, cancellation, results, handoff (§8).
 """
 
-from . import capability, consent, crypto, identity, registry, schema
+from . import capability, consent, crypto, identity, registry, schema, task
 from .bus import Bus
 from .clock import Deadline
 from .envelope import KNOWN_TYPES, SUPPORTED_MAJOR, validate
@@ -36,5 +37,6 @@ __all__ = [
     "identity",
     "registry",
     "schema",
+    "task",
     "validate",
 ]

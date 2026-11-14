@@ -10,6 +10,7 @@ M2.1 covers the envelope, the error model, and both framing bindings.
 M2.2 adds identity, Ed25519-signed manifests, and the registry subset.
 M2.3 adds capability tokens, attenuation, binding, and revocation.
 M2.4 adds consent receipts and their linkage to capabilities.
+M2.5 adds the task tree: delegation, budgets, cancellation, results, handoff.
 Cases outside the implemented scope return `skip` with the milestone that
 will pick them up, so a partial implementation reports honestly.
 """
@@ -30,14 +31,15 @@ from osap import (  # noqa: E402
     capability,
     consent,
     crypto,
+    envelope,
     framing,
     identity,
     registry,
+    task,
 )
 from osap.clock import parse_timestamp  # noqa: E402
 
 MILESTONES = {
-    "C4": "M2.5 task model",
     "C5": "M2.5 context fabric",
     "C6": "M2.5 federation adapters",
     "C7": "M2.6 audit chain",
@@ -137,7 +139,13 @@ def _dev_registry(include_notes: bool = True) -> registry.Registry:
 
 def conformance_check(case: dict, documents: dict) -> dict:
     level = case.get("level")
-    handler = {"C0": _check_c0, "C1": _check_c1, "C2": _check_c2, "C3": _check_c3}.get(level)
+    handler = {
+        "C0": _check_c0,
+        "C1": _check_c1,
+        "C2": _check_c2,
+        "C3": _check_c3,
+        "C4": _check_c4,
+    }.get(level)
     if handler is None:
         return {
             "outcome": "skip",
@@ -388,4 +396,119 @@ def _check_receipt_use(receipt: dict, context: list) -> dict:
     return {
         "outcome": "accept",
         "state": {"receipt_id": receipt["receipt_id"], "cap_id": cap["cap_id"]},
+    }
+
+
+# --- C4 collaboration -------------------------------------------------------
+
+
+def _check_c4(case: dict, documents: dict) -> dict:
+    operation = case.get("operation")
+    primary = documents.get("primary")
+    context = documents.get("context") or []
+    params = (case.get("input") or {}).get("params") or {}
+
+    if operation == "send":
+        return _check_c4_send(primary, context, params)
+    if operation == "use":
+        return _check_c4_use(primary, context[0], params)
+    if operation == "delegate":
+        return _check_c4_delegate(primary, context[0])
+    if operation == "handoff":
+        return _check_c4_handoff(primary, context, params)
+    return {"outcome": "skip", "reason": f"C4 operation {operation!r} has no automated check"}
+
+
+def _board_with(context: list) -> task.TaskBoard:
+    board = task.TaskBoard()
+    for document in context:
+        if "task_id" in document:
+            board.add(task.Task.from_document(document))
+    return board
+
+
+def _check_c4_send(message: dict, context: list, params: dict) -> dict:
+    # §8.4: peer mode requires session_id, which the envelope schema enforces.
+    envelope.validate(message)
+
+    board = _board_with(context)
+    current = board.get((message.get("task") or {}).get("id"))
+    if current is None:
+        return {"outcome": "accept", "state": {"validated": True}}
+
+    if params.get("handoff_accepted"):
+        for document in context:
+            if document.get("type") == "handoff":
+                board.handoff(current, document, renewed_consent=True)
+
+    if message["type"] == "result":
+        board.accept_result(message)
+        return {"outcome": "accept", "state": {"task_status": current.status}}
+
+    board.require_owner(current.task_id, message["from"])
+    return {"outcome": "accept", "state": {"owner": current.owner}}
+
+
+def _check_c4_use(token: dict, envelope: dict, params: dict) -> dict:
+    capability.validate_token(token)
+    authority = capability.CapabilityAuthority()
+
+    audience = _receiver(envelope)
+    authority.check_binding(token, envelope, audience=audience)
+    authority.check_validity(token, now=parse_timestamp(envelope["ts"]))
+
+    task.check_budget(
+        token.get("constraints", {}).get("max_budget") or {}, params.get("consumed") or {}
+    )
+
+    risk = params.get("risk") or _risk_of(envelope)
+    authority.require_consent(token, risk=risk)
+    return {
+        "outcome": "accept",
+        "state": {
+            "audience": audience,
+            "budget_ok": True,
+            "peer_mode": bool(params.get("peer_mode")),
+        },
+    }
+
+
+def _check_c4_delegate(message: dict, parent_document: dict) -> dict:
+    board = task.TaskBoard()
+    parent = board.add(task.Task.from_document(parent_document))
+    envelope.validate(message)
+    child = board.delegate(parent.task_id, message)
+    return {
+        "outcome": "accept",
+        "state": {
+            "child_task_id": child.task_id,
+            "remaining": task.remaining_budget(parent.budget, parent.consumed),
+        },
+    }
+
+
+def _check_c4_handoff(message: dict, context: list, params: dict) -> dict:
+    board = task.TaskBoard()
+    documents = [document for document in context if "task_id" in document]
+    current = documents[0] if documents else None
+    record = task.Task.from_document(current) if current else task.Task.from_message(message)
+    board.add(record)
+
+    before = record.snapshot()
+    result = board.handoff(
+        record,
+        message,
+        risk=params.get("risk"),
+        renewed_consent=bool(params.get("renewed_consent", False)),
+        accepted=bool(params.get("handoff_accepted", True)),
+    )
+    after = record.snapshot()
+    return {
+        "outcome": "accept",
+        "state": {
+            "handoff_result": result,
+            "owner": after["owner"],
+            "budget_unchanged": before["budget"] == after["budget"],
+            "task_status_unchanged": before["status"] == after["status"],
+        },
     }
