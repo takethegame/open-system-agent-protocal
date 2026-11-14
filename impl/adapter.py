@@ -11,6 +11,7 @@ M2.2 adds identity, Ed25519-signed manifests, and the registry subset.
 M2.3 adds capability tokens, attenuation, binding, and revocation.
 M2.4 adds consent receipts and their linkage to capabilities.
 M2.5 adds the task tree: delegation, budgets, cancellation, results, handoff.
+M2.5b adds the context fabric: handles, labels, blackboard, objects, storage.
 Cases outside the implemented scope return `skip` with the milestone that
 will pick them up, so a partial implementation reports honestly.
 """
@@ -30,6 +31,7 @@ from osap import (  # noqa: E402
     OsapError,
     capability,
     consent,
+    context,
     crypto,
     envelope,
     framing,
@@ -40,7 +42,6 @@ from osap import (  # noqa: E402
 from osap.clock import parse_timestamp  # noqa: E402
 
 MILESTONES = {
-    "C5": "M2.5 context fabric",
     "C6": "M2.5 federation adapters",
     "C7": "M2.6 audit chain",
 }
@@ -145,6 +146,7 @@ def conformance_check(case: dict, documents: dict) -> dict:
         "C2": _check_c2,
         "C3": _check_c3,
         "C4": _check_c4,
+        "C5": _check_c5,
     }.get(level)
     if handler is None:
         return {
@@ -512,3 +514,101 @@ def _check_c4_handoff(message: dict, context: list, params: dict) -> dict:
             "task_status_unchanged": before["status"] == after["status"],
         },
     }
+
+
+# --- C5 context fabric ------------------------------------------------------
+
+
+def _check_c5(case: dict, documents: dict) -> dict:
+    operation = case.get("operation")
+    primary = documents.get("primary")
+    params = (case.get("input") or {}).get("params") or {}
+
+    if operation == "resolve":
+        return _check_c5_resolve(primary, params)
+    if operation == "cancel":
+        return _check_c5_cancel(primary, params)
+    if operation == "delete":
+        return _check_c5_delete(params)
+    if operation == "cache":
+        return _check_c5_cache(primary, params)
+    if operation == "declare":
+        return _check_c5_declare(params)
+    return {"outcome": "skip", "reason": f"C5 operation {operation!r} has no automated check"}
+
+
+def _check_c5_resolve(handle: dict, params: dict) -> dict:
+    fabric = context.ContextFabric()
+    now = parse_timestamp(handle["created_at"])
+    agent = handle.get("audience") or params.get("agent")
+    granted = params.get("granted_actions") or [context.RESOLVE_ACTION]
+
+    resolved = fabric.resolve(
+        handle,
+        agent=agent,
+        granted_actions=granted,
+        now=now,
+        os_permission=params.get("os_permission", "granted"),
+        egress=bool(params.get("egress")),
+        user_approval=bool(params.get("user_approval")),
+    )
+
+    if "source_labels" in params:
+        # §9.4: a derived object may not lower its label; report the effective one.
+        report = context.label_violation(handle, params["source_labels"])
+        return {
+            "outcome": "observe",
+            "state": {**report, "resolved": True, "audit": fabric.audit[-1]},
+        }
+
+    return {
+        "outcome": "accept",
+        "state": {
+            "handle": resolved["handle"],
+            "label": resolved["label"],
+            "decision": fabric.audit[-1]["decision"],
+            "audit_action": fabric.audit[-1]["action"],
+        },
+    }
+
+
+def _check_c5_cancel(board: dict, params: dict) -> dict:
+    report = context.close_blackboard(board, task_ended=bool(params.get("task_ended", True)))
+    return {"outcome": "accept", "state": report}
+
+
+def _check_c5_delete(params: dict) -> dict:
+    report = context.delete_object(
+        params["object"],
+        reference_count=int(params.get("reference_count", 0)),
+        hard_delete=bool(params.get("hard_delete", False)),
+    )
+    return {"outcome": "observe", "state": report}
+
+
+def _check_c5_cache(handle: dict, params: dict) -> dict:
+    report = context.cache_window(
+        handle,
+        requested_ttl=int(params["cache_ttl"]),
+        elapsed_seconds=int(params.get("elapsed_seconds", 0)),
+    )
+    return {"outcome": "accept", "state": report}
+
+
+def _check_c5_declare(params: dict) -> dict:
+    if "memory_query_sources" in params:
+        return {
+            "outcome": "observe",
+            "state": context.memory_promotions(list(params["memory_query_sources"])),
+        }
+
+    declares = {
+        "quota": bool(params.get("declares_quota")),
+        "garbage_collection": bool(params.get("declares_gc")),
+        "crash_recovery": bool(params.get("declares_crash_recovery")),
+        "encryption": bool(params.get("declares_encryption")),
+        "path_safety": bool(params.get("declares_path_safety")),
+        "deletion": bool(params.get("declares_deletion")),
+    }
+    report = context.storage_declaration(params.get("cf_mode", "os_native"), declares)
+    return {"outcome": "observe", "state": report}

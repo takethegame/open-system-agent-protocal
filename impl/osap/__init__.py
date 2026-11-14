@@ -10,10 +10,11 @@ Covered so far:
   and the registry subset (§4, §6);
 - M2.3: capability tokens, attenuation, binding, revocation (§5.1-§5.6);
 - M2.4: consent receipts and capability linkage (§5.8);
-- M2.5: task tree, budgets, cancellation, results, handoff (§8).
+- M2.5: task tree, budgets, cancellation, results, handoff (§8); context
+  fabric handles, labels, blackboard, objects (§9).
 """
 
-from . import capability, consent, crypto, identity, registry, schema, task
+from . import capability, consent, context, crypto, identity, registry, schema, task
 from .bus import Bus
 from .clock import Deadline
 from .envelope import KNOWN_TYPES, SUPPORTED_MAJOR, validate
@@ -33,6 +34,7 @@ __all__ = [
     "SUPPORTED_MAJOR",
     "capability",
     "consent",
+    "context",
     "crypto",
     "identity",
     "registry",

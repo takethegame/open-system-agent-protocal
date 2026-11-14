@@ -1,6 +1,6 @@
 # 参考实现（M2.1 – M2.5）
 
-本目录是 OSAP 0.1 的最小参考实现。已完成路线图的 **M2.1a（信封 + 分帧 + 错误模型）**、**M2.2（身份 + 签名 + 注册表）**、**M2.3（能力模型）**、**M2.4（同意回执）** 与 **M2.5a（任务模型）**。
+本目录是 OSAP 0.1 的最小参考实现。已完成路线图的 **M2.1a（信封 + 分帧 + 错误模型）**、**M2.2（身份 + 签名 + 注册表）**、**M2.3（能力模型）**、**M2.4（同意回执）**、**M2.5a（任务模型）** 与 **M2.5b（上下文织构）**。
 
 规范性内容以 [`../docs/standard.md`](../docs/standard.md) 为准；本目录只回答“这段文字如何落成代码”。
 
@@ -33,8 +33,18 @@
 | 取消 | §8.7 | 沿任务树向下传播，`detached` 子任务继续运行 |
 | 结果 | §8.8 | 只接受 assignee 的 `result`，`body.schema` 必须等于 `result_schema` |
 | 所有权转移 | §8.9 | `handoff` 一次性转移、拒绝即不变、L3/L4 需新回执 |
+| 句柄解析 | §9.2 | `resolve` 授权、`audience`/`allowed_agents`、每次解析写 `context.resolve` 审计 |
+| 句柄 TTL | §9.3 | `expires_at` 或 `created_at + ttl`；过期即拒绝，不自动续期 |
+| 长期记忆 | §9.3 | 记忆句柄必须单独持有 `memory.read`，任务能力不隐含 |
+| 信息流标签 | §9.4 | `public < personal < sensitive < secret`；派生对象不得降低标签 |
+| 任务黑板 | §9.5 | 任务结束即清理/归档，不自动晋升为长期记忆 |
+| 对象删除 | §9.6、§9.7 | 先查引用；被引用对象墓碑化，不硬删；写审计事件 |
+| 缓存窗口 | §9.7 | 缓存 TTL 钳制到句柄 TTL，被撤销的句柄不会命中 |
+| 数据出口 | §9.8 | `sensitive`/`secret` 离开设备需要用户显式放行 |
+| OS 权限 | §9.9 | OS 拒绝是外层边界，句柄不能绕过沙箱 |
+| 存储声明 | §9.10 | `managed_store` 必须覆盖配额、GC、崩溃恢复、加密、路径安全、删除 |
 
-**不在本阶段**：上下文织构（M2.5b）、联邦适配器（M2.5c）、审计链（M2.6）、真实 OS 传输绑定（M2.1b）。未实现的类型会抛 `NotImplementedError`，一致性运行器据此记为 `skip`。
+**不在本阶段**：联邦适配器（M2.5c）、审计链（M2.6）、真实 OS 传输绑定（M2.1b）。未实现的类型会抛 `NotImplementedError`，一致性运行器据此记为 `skip`。
 
 ## 2. 目录
 
@@ -47,6 +57,7 @@ impl/
     capability.py       §5.2–§5.6 能力凭证、衰减、绑定、撤销
     clock.py            单调时钟 deadline
     consent.py          §5.8 同意回执与能力范围校验
+    context.py          §9 句柄、标签、黑板、对象、缓存、存储声明
     crypto.py           Ed25519 签名与规范化 JSON
     envelope.py         §7.1 校验（版本 → 类型 → schema）
     errors.py           §7.7 错误码与 OsapError
@@ -66,7 +77,7 @@ impl/
 python3 -m unittest discover -s impl/tests -t impl
 
 # 只跑已实现的范围
-python3 tools/conformance_run.py --impl impl/adapter.py --level C0,C1,C2,C3,C4
+python3 tools/conformance_run.py --impl impl/adapter.py --level C0,C1,C2,C3,C4,C5
 
 # 全量：已实现的出 pass，其余按里程碑 skip
 python3 tools/conformance_run.py --impl impl/adapter.py --format md --out report.md
@@ -76,7 +87,7 @@ python3 tools/conformance_run.py --impl impl/adapter.py --format md --out report
 
 ```
 python3 tools/conformance_run.py --impl impl/adapter.py
-→ 68 cases [C0..C7]: 36 pass, 0 fail, 32 skip
+→ 68 cases [C0..C7]: 47 pass, 0 fail, 21 skip
 ```
 
 | 等级 | 结果 | 说明 |
@@ -86,12 +97,15 @@ python3 tools/conformance_run.py --impl impl/adapter.py
 | C2 | 5 pass / 1 manual skip | 清单索引、发现响应、TTL |
 | C3 | 12 pass | 绑定、衰减、撤销、风险与回执 |
 | C4 | 8 pass / 3 manual skip | 委派预算、结果契约、peer 会话、所有权、handoff |
+| C5 | 11 pass | 解析授权、过期、标签继承、出口、黑板、删除、缓存、存储声明、记忆边界 |
 
-C5–C7 共 26 条由适配器显式 `skip`，报告里写明归属里程碑。剩余 6 条 skip 是 manual 用例（C0-01、C0-06、C2-05、C4-01、C4-08、C4-09）。
+C6–C7 共 15 条由适配器显式 `skip`，报告里写明归属里程碑。剩余 6 条 skip 是 manual 用例（C0-01、C0-06、C2-05、C4-01、C4-08、C4-09）。
 
 C3 的 12 条都命中预期错误码，且实现被断言为“只在目标维度上失败”：C3-04…C3-07 的 `details.violations` 分别只有 `actions`、`resources`、`exp`、`depth`+`constraints.max_depth`。
 
 C4 的 8 条同样逐条核对过拒绝原因：C4-02 是 `wall_ms` 超出父剩余 8000、C4-03 是 `result_schema` 不符、C4-04 是缺 `session_id`、C4-05 是 `subject` 不是发送方、C4-06 是 L3 handoff 无新回执、C4-07 是 `wall_ms` 已用 6000 > 预算 5000、C4-10 是 owner 已变为 calendar。
+
+C5 的 5 条拒绝/接受和 6 条观察也都核对过实际原因：C5-01 只给了 `read` 缺 `resolve`、C5-02 过期早于夹具“现在”、C5-04 `secret` 出口无放行、C5-05 黑板归档且不晋升、C5-07 缓存 900 s 被钳到 600 s、C5-09 OS 权限先于任何授权、C5-10 只有 `task.read` 缺 `memory.read`；C5-03/06/08/11 的 `observe` 报告分别给出标签继承、引用检查与审计、缺失的存储职责、被禁止晋升的来源。
 
 ## 5. 设计决定
 
@@ -157,6 +171,22 @@ C3-04…C3-07 用 `context` 指向未变异的 `examples/capability.json`，适�
 
 `detached=true` 的子任务按 §8.7 可以继续运行，但必须失去父任务能力。实现直接跳过整棵 detached 子树（连它的后代也不取消），因为失去父能力的后代不应再被父链上的取消影响。这一条目前只有单元测试覆盖，C4-01 仍是 manual。
 
+### 5.15 夹具的“现在”取句柄的 `created_at`
+
+C5 没有信封，也没有统一的 `ts`。适配器用 `context-handle.json` 的 `created_at`（2026-11-10T10:14:45Z）作为判定基准，这样 C5-02 把 `expires_at` 改到 09:00:00Z 时必然已过期，而 C5-01/03/04/09/10 的 600 s TTL 仍然有效。用墙钟会让整组夹具随时间失效。
+
+### 5.16 记忆句柄按命名空间识别
+
+§9.3 只规定“长期记忆必须单独授权”，没有定义 wire format。实现把 `ctx://user/memory` 前缀（或 `scope=user` 且句柄含该前缀）视为记忆句柄，要求 `memory.read`；普通 `ctx://` 即使 `scope=user` 仍只需 `resolve`，避免把用户级上下文误判成记忆。
+
+### 5.17 标签违规返回 `observe`，不硬拒绝
+
+§9.4 说派生对象“MUST 继承不低于其来源的标签”，但没说违规时是拒绝解析还是只记录。实现选择“解析成功后报告 `lowered=true` / `effective_label`”，因为 C5-03 的预期就是 `observe`：拒绝派生与抬高标签都被视为合规。真正需要阻止的是出口，由 §9.8 的 `POLICY_CONSENT_REQUIRED` 负责。
+
+### 5.18 被引用对象的删除只墓碑化
+
+§9.6 说被引用对象“SHOULD 延迟删除或标记墓碑”，§9.7 要求删除触发引用清理与审计。实现把“引用数 > 0 且 `hard_delete=true`”判为不合约（`deleted=false`、`tombstoned=false`），软删除则返回 `tombstoned=true`；两种情况都写 `audit_written=true`，因为 C5-06 断言的是“有引用检查与审计事件”，不是“真的删掉了”。
+
 ## 6. 已知限制
 
 1. **内存态**：幂等索引、注册表、轮换状态都在进程内，重启即丢；§7.8 要求可重建的持久索引，留给 M2.6。
@@ -168,7 +198,9 @@ C3-04…C3-07 用 `context` 指向未变异的 `examples/capability.json`，适�
 7. **`max_uses` 未计数**：衰减时比较上限，但使用次数没有落账，重放同一凭证不会被扣减。
 8. **撤销只在内存**：`CapabilityAuthority.revoked` 是进程内集合，重启即丢，也没有广播；§5.5 要求撤销事件写入审计账本并通知受影响 Agent，留给 M2.6。
 9. **委派未校验能力链**：`delegate` 只检查任务预算与深度，没有把 `delegated_capability` 与父能力凭证做完整衰减比对（夹具里没有父凭证）。
-10. **上下文、联邦、审计仍缺席**：C5–C7 全部 `skip`，因此 36 个 pass 不证明上下文织构、联邦或审计链。
+10. **上下文只在内存**：`ContextFabric` 的审计与黑板状态不持久化，也没有真正撤销句柄；§9.7 的“谁在何时解析了哪个句柄”目前只能读进程内列表。
+11. **没有真实对象存储**：`delete_object` 只返回判定结果，不触碰文件系统；`storage_declaration` 只核对声明，不实现配额、GC 或加密。
+12. **联邦、审计仍缺席**：C6–C7 全部 `skip`，因此 47 个 pass 不证明联邦适配或审计哈希链。
 
 ## 7. 与规范的偏差登记
 
@@ -182,6 +214,9 @@ C3-04…C3-07 用 `context` 指向未变异的 `examples/capability.json`，适�
 | 回执中的 `agent` | §5.8 未明确要求回执绑定能力 `subject` | 实现额外校验 `receipt.agent == capability.subject`，不改变任何用例结果 |
 | `audience` 与 `actions` 的检查顺序 | 规范未规定 | 固定为 `cap_id` → `task_id` → `audience` → `actions` → `resources`，保证同一输入总是同一错误码 |
 | 委派超预算的错误码 | §8.6 只定义了执行期超支 | 委派阶段用 `POLICY_DENIED`，执行期用 `TASK_BUDGET_EXCEEDED` |
+| 记忆句柄的识别 | §9.3 未定义记忆 wire format | 按 `ctx://user/memory` 前缀识别，要求 `memory.read` |
+| 标签违规的处理 | §9.4 未规定拒绝还是记录 | 解析成功后报告 `lowered`/`effective_label`，对应 C5-03 的 `observe` |
+| 被引用对象的删除 | §9.6 用 SHOULD 描述墓碑 | 软删除墓碑化；硬删被引用对象判为不合约 |
 | 任务状态机的非法转换 | 规范未规定错误码 | 用 `POLICY_DENIED` 并附带 `from`/`to` |
 | 结果状态转换 | §8.8 未规定“结果消息自带 `task.status` 时如何校验” | 先校验结果契约，再走 §8.10 状态机；因此对从未启动的任务返回结果会被拒绝 |
 | 委派的能力链 | §8.5 要求子能力满足全部衰减条件 | 任务侧只校验预算与深度；能力侧需要父凭证，未在夹具中提供 |
