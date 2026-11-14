@@ -156,15 +156,8 @@ class ContextFabric:
     ) -> dict:
         """Resolve one handle or raise `CONTEXT_DENIED`/`CONTEXT_EXPIRED` (§9.2)."""
 
-        expires_at = expiry_of(handle)
-        if expires_at is not None and expires_at <= now:
-            self._event(handle, agent, "deny", "expired")
-            raise OsapError(
-                "CONTEXT_EXPIRED",
-                "context handle has expired and is not renewed automatically",
-                details={"handle": handle.get("handle"), "expires_at": handle.get("expires_at")},
-            )
-
+        # Identity and OS checks come first so a caller that cannot use the
+        # handle learns nothing about its expiry state (§9.2).
         audience = handle.get("audience")
         if audience is not None and agent != audience:
             self._deny(handle, agent, "audience")
@@ -184,6 +177,15 @@ class ContextFabric:
                 "missing_grant",
                 required_action=needed,
                 granted_actions=list(granted_actions),
+            )
+
+        expires_at = expiry_of(handle)
+        if expires_at is not None and expires_at <= now:
+            self._event(handle, agent, "deny", "expired")
+            raise OsapError(
+                "CONTEXT_EXPIRED",
+                "context handle has expired and is not renewed automatically",
+                details={"handle": handle.get("handle"), "expires_at": handle.get("expires_at")},
             )
 
         label = handle.get("label")

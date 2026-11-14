@@ -147,6 +147,13 @@ class ResolveTests(unittest.TestCase):
         self.assertEqual(caught.exception.code, "CONTEXT_DENIED")
         self.assertEqual(caught.exception.details["reason"], "audience")
 
+    def test_non_audience_does_not_learn_the_expiry_state(self):
+        document = handle(expires_at="2026-11-10T09:00:00Z")
+        with self.assertRaises(OsapError) as caught:
+            resolve(document, agent=NOTES)
+        self.assertEqual(caught.exception.code, "CONTEXT_DENIED")
+        self.assertEqual(caught.exception.details["reason"], "audience")
+
     def test_agent_outside_allowed_agents_is_denied(self):
         document = handle(constraints={"allowed_agents": [NOTES]})
         with self.assertRaises(OsapError) as caught:

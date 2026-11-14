@@ -183,7 +183,11 @@ C5 没有信封，也没有统一的 `ts`。适配器用 `context-handle.json` �
 
 §9.4 说派生对象“MUST 继承不低于其来源的标签”，但没说违规时是拒绝解析还是只记录。实现选择“解析成功后报告 `lowered=true` / `effective_label`”，因为 C5-03 的预期就是 `observe`：拒绝派生与抬高标签都被视为合规。真正需要阻止的是出口，由 §9.8 的 `POLICY_CONSENT_REQUIRED` 负责。
 
-### 5.18 被引用对象的删除只墓碑化
+### 5.18 身份与 OS 校验先于过期判定
+
+`ContextFabric.resolve` 的顺序是 audience → `allowed_agents` → OS 权限 → 所需授权 → 过期 → 出口。若先看过期，一个无权使用该句柄的 Agent 就能通过 `CONTEXT_EXPIRED` 推断出句柄存在且曾有 TTL。C5-02 的 audience 与句柄一致，所以仍然报 `CONTEXT_EXPIRED`。
+
+### 5.19 被引用对象的删除只墓碑化
 
 §9.6 说被引用对象“SHOULD 延迟删除或标记墓碑”，§9.7 要求删除触发引用清理与审计。实现把“引用数 > 0 且 `hard_delete=true`”判为不合约（`deleted=false`、`tombstoned=false`），软删除则返回 `tombstoned=true`；两种情况都写 `audit_written=true`，因为 C5-06 断言的是“有引用检查与审计事件”，不是“真的删掉了”。
 
