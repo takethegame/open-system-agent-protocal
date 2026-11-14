@@ -13,6 +13,7 @@ M2.4 adds consent receipts and their linkage to capabilities.
 M2.5 adds the task tree: delegation, budgets, cancellation, results, handoff.
 M2.5b adds the context fabric: handles, labels, blackboard, objects, storage.
 M2.5c adds federation adapters: native descriptors to capability records.
+M2.6 adds the audit chain: verification, redacted export, replay, recovery.
 Cases outside the implemented scope return `skip` with the milestone that
 will pick them up, so a partial implementation reports honestly.
 """
@@ -28,6 +29,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from osap import (  # noqa: E402
     Bus,
+    audit,
     Deadline,
     OsapError,
     capability,
@@ -43,9 +45,7 @@ from osap import (  # noqa: E402
 )
 from osap.clock import parse_timestamp  # noqa: E402
 
-MILESTONES = {
-    "C7": "M2.6 audit chain",
-}
+MILESTONES: dict[str, str] = {}
 
 DEFAULT_VERSION = "0.1"
 
@@ -149,6 +149,7 @@ def conformance_check(case: dict, documents: dict) -> dict:
         "C4": _check_c4,
         "C5": _check_c5,
         "C6": _check_c6,
+        "C7": _check_c7,
     }.get(level)
     if handler is None:
         return {
@@ -626,3 +627,66 @@ def _check_c6(case: dict, documents: dict) -> dict:
     if operation == "index":
         return {"outcome": "accept", "state": federation.project(primary)}
     return {"outcome": "skip", "reason": f"C6 operation {operation!r} has no automated check"}
+
+
+# --- C7 audit and full path -------------------------------------------------
+
+
+def _check_c7(case: dict, documents: dict) -> dict:
+    operation = case.get("operation")
+    primary = documents.get("primary")
+    params = (case.get("input") or {}).get("params") or {}
+
+    if operation == "export":
+        return _check_c7_export(primary, params)
+    if operation == "send":
+        return _check_c7_send(params)
+    if operation == "replay":
+        return {"outcome": "accept", "state": _replay(params)}
+    if operation == "restart":
+        return {"outcome": "accept", "state": audit.recover_effects(primary["events"])}
+    if operation == "declare":
+        return {"outcome": "observe", "state": _compromised_bus(params)}
+    return {"outcome": "skip", "reason": f"C7 operation {operation!r} has no automated check"}
+
+
+def _check_c7_export(chain: dict, params: dict) -> dict:
+    if params.get("redact"):
+        report = audit.redact_chain(chain)
+        return {
+            "outcome": "accept",
+            "state": {
+                "redacted": report["redacted"],
+                "chain_verified": report["chain_verified"],
+                "plaintext_recoverable": report["plaintext_recoverable"],
+            },
+        }
+
+    audit.verify_chain(chain)
+    return {"outcome": "accept", "state": {"chain_verified": True}}
+
+
+def _check_c7_send(params: dict) -> dict:
+    report = audit.authorize_cross_user(
+        params["sender_user"],
+        params["receiver_user"],
+        enabled=bool(params.get("cross_user_enabled", False)),
+        sender_consented=bool(params.get("sender_consented", False)),
+        receiver_consented=bool(params.get("receiver_consented", False)),
+    )
+    return {"outcome": "accept", "state": report}
+
+
+def _replay(params: dict) -> dict:
+    return audit.replay_effect(
+        params["idempotency_key"],
+        repeat=int(params.get("repeat", 1)),
+        replay=bool(params.get("replay", True)),
+    )
+
+
+def _compromised_bus(params: dict) -> dict:
+    return audit.compromised_bus_declaration(
+        bus_compromised=bool(params.get("bus_compromised", False)),
+        claims_p0_protection=bool(params.get("claims_p0_protection", False)),
+    )

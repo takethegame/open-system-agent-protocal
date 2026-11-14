@@ -33,9 +33,8 @@ class IdempotencyIndex:
     def execute_once(self, message_id: str, action: Callable[[], Any]) -> tuple[Any, bool]:
         """Run `action` only for a new id; return `(result, replayed)`."""
 
-        cached = self._entries.get(message_id)
-        if cached is not None:
-            return cached, True
+        if message_id in self._entries:
+            return self._entries[message_id], True
         return self.remember(message_id, action()), False
 
     def forget(self, message_id: str) -> None:

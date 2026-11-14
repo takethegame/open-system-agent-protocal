@@ -12,10 +12,13 @@ Covered so far:
 - M2.4: consent receipts and capability linkage (§5.8);
 - M2.5: task tree, budgets, cancellation, results, handoff (§8); context
   fabric handles, labels, blackboard, objects (§9); federation adapters
-  projecting native descriptors into capability records (§6.7, §6.8).
+  projecting native descriptors into capability records (§6.7, §6.8);
+- M2.6: audit-chain verification, redacted export, replay, and recovery
+  (§10.5–§10.7, §8.11).
 """
 
 from . import (
+    audit,
     capability,
     consent,
     context,
@@ -43,6 +46,7 @@ __all__ = [
     "OsapError",
     "STANDARD_CODES",
     "SUPPORTED_MAJOR",
+    "audit",
     "capability",
     "consent",
     "context",
