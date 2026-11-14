@@ -18,7 +18,8 @@ Entries are written in English to match commit messages; the Chinese text in
 - `impl/osap/capability.py` (M2.3): capability-token validation, the ten attenuation rules of §5.3, stateless audience/task/subject binding, revocation with cascade, and the L3/L4 consent prerequisite.
 - `impl/osap/consent.py` (M2.4): consent-receipt validation ordered as decision, expiry, scope binding, then action/resource subsets.
 - `impl/osap/registry.py`: `capability_descriptor()` and `risk_of()` so an envelope route can be resolved to the receiving agent and its declared risk class.
-- `impl/tests/`: 118 unit tests covering framing, validation order, idempotency, deadlines, signatures, registration rejections, registry freshness, attenuation per dimension, revocation cascade, binding, and receipt ordering.
+- `impl/osap/task.py` (M2.5a): task tree, the §8.10 state machine, delegation budget and depth checks, cancellation that skips detached subtrees, result-contract validation, and handoff with ownership transfer.
+- `impl/tests/`: 160 unit tests covering framing, validation order, idempotency, deadlines, signatures, registration rejections, registry freshness, attenuation per dimension, revocation cascade, binding, receipt ordering, task state transitions, cancellation, delegation budgets, result contracts, and handoff rejections.
 - `tools/conformance_run.py`: loads and validates cases, applies JSON Pointer mutations, runs an implementation adapter, and emits text, JSON, or Markdown reports.
 - `docs/roadmap.md`: milestone plan from 0.1 to 0.2 (M0–M5, decision gates, risk register).
 - `SECURITY.md` / `SECURITY.en.md`: disclosure channel, timelines, security review triggers.
